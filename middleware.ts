@@ -5,8 +5,8 @@ export function middleware(request: NextRequest) {
   // Gelen isteğin URL bilgilerini alıyoruz
   const pathname = request.nextUrl.pathname;
   
-  // Admin sayfası kontrolü
-  if (pathname.startsWith('/admin')) {
+  // Admin sayfası ve API kontrolü - dil kodlarına gerek yok
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     // Basic Auth için credentials kontrolü
     const basicAuth = request.headers.get('authorization');
     
@@ -29,6 +29,8 @@ export function middleware(request: NextRequest) {
     });
   }
   
+  // Admin veya API istekleri değilse, dil yönlendirmesi yap
+  
   // Çok dilli yapı için yönlendirme kontrolü
   const pathnameHasLocale = locales.some(
     locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
@@ -37,7 +39,18 @@ export function middleware(request: NextRequest) {
   // Eğer URL'de zaten bir dil tanımı varsa herhangi bir şey yapmıyoruz
   if (pathnameHasLocale) return;
   
-  // Admin sayfası değilse ve dil tanımı yoksa dil yönlendirmesi yap
+  // Statik dosyalar ve API'ler için dil yönlendirmesi yok
+  if (
+    pathname.startsWith('/_next') || 
+    pathname.startsWith('/images') || 
+    pathname.startsWith('/api') ||
+    pathname === '/favicon.ico' ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+  
+  // Kullanıcının tercih ettiği dili al
   const acceptLanguage = request.headers.get('accept-language');
   let locale: string = 'tr'; // Varsayılan olarak Türkçe
   
@@ -62,11 +75,10 @@ export function middleware(request: NextRequest) {
 // İşlenecek URL'leri belirleyelim
 export const config = {
   matcher: [
-    // Admin sayfalarını işle
+    // Admin ve API endpointlerini korumak için
     '/admin/:path*',
-    // Admin API endpoint'lerini korumak için
     '/api/admin/:path*',
-    // Diğer sayfalar için dil kontrolü (statik dosyalar hariç)
-    '/((?!api|_next/static|_next/image|images|favicon.ico|.well-known|admin).*)',
+    // Diğer tüm sayfalar için dil kontrolü
+    '/:path*',
   ],
 };
