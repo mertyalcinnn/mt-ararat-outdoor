@@ -1,0 +1,21 @@
+{
+  "title": "Private Guidance",
+  "slug": "private-guidance",
+  "description": "Kişiye özel outdoor deneyimleri için profesyonel rehberlik hizmeti",
+  "content": "# Kişiye Özel Rehberlik Hizmeti\n\nÖzel gruplar, aileler veya bireysel maceraperestler için özel rehberlik hizmetimiz, sizin tercihlerinize ve ihtiyaçlarınıza göre şekillendirilir. İster Ağrı Dağı'nın zirvesine tırmanmak, ister bölgedeki gizli kalmış rotaları keşfetmek isteyin, deneyimli rehberlerimiz size eşlik edecek.\n\n## Özel Rehberlik Avantajları\n\n- Size özel planlama ve program\n- Esneklik ve kişiselleştirilmiş deneyim\n- Daha fazla öğrenme fırsatı\n- Güvenlik ve rahat\n\n## Aktiviteler\n\nRehberlik hizmetimiz tüm aktivitelerimiz için geçerlidir:\n- Dağ tırmanışı\n- Kayak turu\n- Doğa yürüyüşü\n- Deniz kaynağı ve SUP\n- Kültürel turlar",
+  "coverImage": "/images/private-guidance-cover.jpg",
+  "gallery": [
+    "/images/private-guidance-1.jpg",
+    "/images/private-guidance-2.jpg"
+  ],
+  "duration": "Talebe göre belirlenir",
+  "difficultyLevel": "Talebe göre belirlenir",
+  "includedServices": [
+    "Profesyonel rehberlik",
+    "Özel program planlama",
+    "Ekipman tavsiyeleri",
+    "Lojistik destek"
+  ],
+  "contactWhatsapp": "+905001234567",
+  "featured": false
+}

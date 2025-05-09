@@ -1,0 +1,22 @@
+{
+  "title": "Hiking",
+  "slug": "hiking",
+  "description": "Ağrı Dağı ve çevresinde doğa yürüyüşleri",
+  "content": "# Doğa Yürüyüşleri\n\nAğrı Dağı eteklerinde ve çevresindeki vadilerde muhteşem doğa yürüyüşü rotaları bulunmaktadır. Her seviyeye uygun rotalarla doğanın kalbine yolculuk yapacak, eşsiz manzaraların ve flora-faunanın keyfini çıkaracaksınız.\n\n## Popüler Rotalar\n\n- Ağrı Dağı Etekleri: 1-2 saatlik kolay yürüyüşler\n- İshak Paşa Sarayı - Meteor Çukuru rotası: Orta zorlukta, 4-5 saat\n- Balık Gölü çevresi: Kolay-orta zorluktaki rotalar\n\n## Sezon\n\nNisan-Ekim ayları arası en uygun dönemdir.",
+  "coverImage": "/images/hiking-cover.jpg",
+  "gallery": [
+    "/images/hiking-1.jpg",
+    "/images/hiking-2.jpg",
+    "/images/hiking-3.jpg"
+  ],
+  "duration": "Yarım gün - 2 gün",
+  "difficultyLevel": "Kolay",
+  "includedServices": [
+    "Rehberlik hizmeti",
+    "Haritalar",
+    "İlk yardım kiti",
+    "Yemekler (tam gün turlarda)"
+  ],
+  "contactWhatsapp": "+905001234567",
+  "featured": true
+}

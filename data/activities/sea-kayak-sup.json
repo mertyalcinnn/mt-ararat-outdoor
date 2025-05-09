@@ -1,0 +1,22 @@
+{
+  "title": "Sea Kayak & SUP",
+  "slug": "sea-kayak-sup",
+  "description": "Turkuaz sularda deniz kaynağı ve SUP (Stand Up Paddle) macerası",
+  "content": "# Deniz Kaynağı ve SUP Aktiviteleri\n\nTürkiye'nin muhteşem kıyılarında deniz kaynağı ve SUP aktiviteleri ile suyun üzerinde huzur dolu bir maceraya hazırlanın. Her seviyeye uygun turlarımızla deniz keyfini doyasıya yaşayacaksınız.\n\n## Deniz Kaynağı\n\nDeniz kaynağı, koyları ve mağaraları keşfetmenin en güzel yoludur. Rehberlerimiz eşliğinde, erişilmesi zor koyları ve gizli mağaraları keşfedeceksiniz.\n\n## SUP (Stand Up Paddle)\n\nSUP, hem rahatlatıcı hem de keyifli bir su aktivitesidir. Sakin sularda sörf tahtası üzerinde kürek çekerek ilerleyeceğiniz bu aktivite, hem spor yapmak hem de doğayla iç içe olmak için mükemmel bir fırsat.",
+  "coverImage": "/images/sea-kayak-sup-cover.jpg",
+  "gallery": [
+    "/images/sea-kayak-1.jpg",
+    "/images/sup-1.jpg",
+    "/images/sea-kayak-2.jpg"
+  ],
+  "duration": "Yarım gün - Tam gün",
+  "difficultyLevel": "Kolay",
+  "includedServices": [
+    "Ekipman (kayak/SUP tahtası, can yeleği, kürek)",
+    "Rehberlik hizmeti",
+    "Güvenlik brifingi",
+    "Atıştırmalıklar (tam gün turlarda)"
+  ],
+  "contactWhatsapp": "+905001234567",
+  "featured": true
+}
