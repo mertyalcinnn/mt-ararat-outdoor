@@ -64,6 +64,8 @@ export const config = {
   matcher: [
     // Admin sayfalarını işle
     '/admin/:path*',
+    // Admin API endpoint'lerini korumak için
+    '/api/admin/:path*',
     // Diğer sayfalar için dil kontrolü (statik dosyalar hariç)
     '/((?!api|_next/static|_next/image|images|favicon.ico|.well-known|admin).*)',
   ],
