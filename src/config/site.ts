@@ -20,7 +20,7 @@ export const siteConfig = {
   
   // Sosyal medya
   socialMedia: {
-    instagram: "https://instagram.com/likyaclimbings",
+    instagram: "https://instagram.com/likyaclimbing_olympos",
     facebook: "https://facebook.com/likyaclimbings",
     twitter: "https://twitter.com/likyaclimbings"
   },

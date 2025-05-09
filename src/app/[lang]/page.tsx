@@ -1,8 +1,10 @@
 import Hero from "@/components/Hero";
 import ActivityList from "@/components/ActivityList";
+import InstagramFeed from "@/components/InstagramFeed";
 import { getHomepageData, getAllActivities, getTestimonials } from "@/lib/api";
 import { getDictionary } from "@/dictionaries";
 import { Locale } from "@/lib/i18n";
+import { getInstagramFeed } from "@/lib/instagram";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,6 +25,9 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
   const testimonials = getTestimonials() as Testimonial[];
   const dictionary = getDictionary(lang);
   const { homepage } = dictionary;
+  
+  // Instagram gönderilerini getir
+  const instagramPosts = await getInstagramFeed(8);
 
   return (
     <div>
@@ -196,7 +201,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                 <div className="rounded-lg overflow-hidden shadow-xl">
                   <Image
                     src="/images/about-section.jpg"
-                    alt="Mt.Ararat Outdoor Aktiviteleri"
+                    alt="Climbing Activities"
                     width={600}
                     height={450}
                     className="object-cover w-full h-full"
@@ -305,193 +310,14 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         </div>
       </section>
 
-      {/* Öne Çıkan Fotoğraflar */}
-      <section className="section bg-white">
-        <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              {homepage.instagram.title}
-            </h2>
-            <p className="text-lg max-w-2xl mx-auto">
-              {homepage.instagram.description}
-              <a
-                href="https://instagram.com/mtararatoutdoor"
-                className="text-primary font-bold ml-2"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {homepage.instagram.followUs}
-              </a>
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="aspect-square relative overflow-hidden rounded-lg group">
-              <Image
-                src="/images/instagram-1.jpg"
-                alt="Instagram Paylaşımı"
-                width={300}
-                height={300}
-                className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
-              </div>
-            </div>
-            <div className="aspect-square relative overflow-hidden rounded-lg group">
-              <Image
-                src="/images/instagram-2.jpg"
-                alt="Instagram Paylaşımı"
-                width={300}
-                height={300}
-                className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
-              </div>
-            </div>
-            <div className="aspect-square relative overflow-hidden rounded-lg group">
-              <Image
-                src="/images/instagram-3.jpg"
-                alt="Instagram Paylaşımı"
-                width={300}
-                height={300}
-                className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
-              </div>
-            </div>
-            <div className="aspect-square relative overflow-hidden rounded-lg group">
-              <Image
-                src="/images/instagram-4.jpg"
-                alt="Instagram Paylaşımı"
-                width={300}
-                height={300}
-                className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Maceraya Hazır mısınız Bölümü */}
-      <section className="section py-20 relative">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/cta-background.jpg"
-            alt="Call to Action Background"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-primary/70"></div>
-        </div>
-        <div className="container-custom text-center relative z-10 text-white">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            {homepage.cta.title}
-          </h2>
-          <p className="text-xl max-w-2xl mx-auto mb-8">
-            {homepage.cta.description}
-          </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link
-              href={`/${lang}/contact`}
-              className="btn bg-white text-primary hover:bg-light hover:text-primary/90 text-lg px-8 py-3"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              {homepage.cta.contact}
-            </Link>
-            <Link
-              href={`/${lang}/activities`}
-              className="btn border-2 border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-3"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-              {homepage.cta.explore}
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Instagram Beslemesi Bölümü */}
+      <InstagramFeed 
+        posts={instagramPosts}
+        title={homepage.instagram.title}
+        description={homepage.instagram.description}
+        followText={homepage.instagram.followUs}
+        lang={lang}
+      />
     </div>
   );
 }
