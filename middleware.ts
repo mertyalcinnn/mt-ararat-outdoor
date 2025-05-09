@@ -5,7 +5,31 @@ export function middleware(request: NextRequest) {
   // Gelen isteğin URL bilgilerini alıyoruz
   const pathname = request.nextUrl.pathname;
   
-  // Şu anki dilin kontrolü; URL'in başında bir dil kodu var mı?
+  // Admin sayfası kontrolü
+  if (pathname.startsWith('/admin')) {
+    // Basic Auth için credentials kontrolü
+    const basicAuth = request.headers.get('authorization');
+    
+    if (basicAuth) {
+      const authValue = basicAuth.split(' ')[1];
+      const [user, pwd] = atob(authValue).split(':');
+      
+      // Kullanıcı adı ve şifre kontrolü
+      if (user === 'admin' && pwd === 'mtararat2025') {
+        return NextResponse.next();
+      }
+    }
+    
+    // Yetkilendirme başarısızsa, Basic Auth popup'ı tetikleyin
+    return new NextResponse('Yetkilendirme gerekiyor', {
+      status: 401,
+      headers: {
+        'WWW-Authenticate': 'Basic realm="Mt.Ararat Admin"',
+      },
+    });
+  }
+  
+  // Çok dilli yapı için yönlendirme kontrolü
   const pathnameHasLocale = locales.some(
     locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
@@ -13,7 +37,7 @@ export function middleware(request: NextRequest) {
   // Eğer URL'de zaten bir dil tanımı varsa herhangi bir şey yapmıyoruz
   if (pathnameHasLocale) return;
   
-  // Kullanıcının tercih ettiği dili header'dan alalım (tarayıcı ayarları)
+  // Admin sayfası değilse ve dil tanımı yoksa dil yönlendirmesi yap
   const acceptLanguage = request.headers.get('accept-language');
   let locale: string = 'tr'; // Varsayılan olarak Türkçe
   
@@ -38,8 +62,9 @@ export function middleware(request: NextRequest) {
 // İşlenecek URL'leri belirleyelim
 export const config = {
   matcher: [
-    // Şu URL'leri işleme: /api/* veya /_ ile başlayan veya
-    // . içeren URL'leri (statik dosyalar) işlemeyelim
-    '/((?!api|_next/static|_next/image|images|favicon.ico|.well-known).*)',
+    // Admin sayfalarını işle
+    '/admin/:path*',
+    // Diğer sayfalar için dil kontrolü (statik dosyalar hariç)
+    '/((?!api|_next/static|_next/image|images|favicon.ico|.well-known|admin).*)',
   ],
 };
