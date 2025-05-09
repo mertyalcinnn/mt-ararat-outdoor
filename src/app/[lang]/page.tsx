@@ -1,10 +1,10 @@
 import Hero from "@/components/Hero";
 import ActivityList from "@/components/ActivityList";
-import InstagramFeed from "@/components/InstagramFeed";
+import ManualInstagramFeed from "@/components/ManualInstagramFeed";
 import { getHomepageData, getAllActivities, getTestimonials } from "@/lib/api";
 import { getDictionary } from "@/dictionaries";
 import { Locale } from "@/lib/i18n";
-import { getInstagramFeed } from "@/lib/instagram";
+import { fetchInstagramPosts } from "@/lib/instagram";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,6 +16,9 @@ interface Testimonial {
   activity: string;
 }
 
+// Sayfa yenileme stratejisi - 1 saat cache
+export const revalidate = 3600;
+
 export default async function Home({ params }: { params: { lang: Locale } }) {
   // Dil parametresini güvenli bir şekilde al
   const lang = params?.lang || "tr";
@@ -26,8 +29,11 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
   const dictionary = getDictionary(lang);
   const { homepage } = dictionary;
   
-  // Instagram gönderilerini getir
-  const instagramPosts = await getInstagramFeed(8);
+  // Instagram kullanıcı adı
+  const instagramUsername = "likyaclimbing_olympos";
+  
+  // Instagram gönderilerini getirmeyi dene - hata durumunda içerideki fallback mekanizma çalışacak
+  const instagramPosts = await fetchInstagramPosts(instagramUsername, 8).catch(() => []);
 
   return (
     <div>
@@ -311,12 +317,12 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
       </section>
 
       {/* Instagram Beslemesi Bölümü */}
-      <InstagramFeed 
-        posts={instagramPosts}
+      <ManualInstagramFeed 
         title={homepage.instagram.title}
         description={homepage.instagram.description}
         followText={homepage.instagram.followUs}
         lang={lang}
+        instagramUsername={instagramUsername}
       />
     </div>
   );

@@ -18,12 +18,18 @@ export default function Footer({ lang }: { lang: Locale }) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Link href={`/${lang}`} className="flex items-center">
-              <div className="relative h-12 w-12 mr-2 flex items-center justify-center bg-primary rounded-md">
-                <div className="text-2xl font-bold text-white">L</div>
+              <div className="relative w-12 h-12 mr-2">
+                <Image
+                  src={siteConfig.logo}
+                  alt={siteConfig.name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain brightness-0 invert"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-wide text-white">
-                  {siteConfig.name.toUpperCase()}
+                  {siteConfig.name.split(" ")[0].toUpperCase()}
                 </span>
                 <span className="text-xs font-medium tracking-wider text-white/80">
                   {siteConfig.slogan}

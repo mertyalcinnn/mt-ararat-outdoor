@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { locales, localeNames, Locale } from "@/lib/i18n";
 import { getDictionary } from "@/dictionaries";
@@ -49,15 +50,17 @@ export default function Header({ lang }: { lang: Locale }) {
       <div className="container-custom">
         <div className="flex items-center justify-between">
           <Link href={`/${lang}`} className="flex items-center">
-            <div className="relative h-12 w-12 mr-2 flex items-center justify-center">
-              {/* Doğrudan logo metni kullan, görsel hataları önlemek için */}
-              <div
-                className={`text-2xl font-bold ${
-                  scrolled ? "text-primary" : "text-white"
-                }`}
-              >
-                L
-              </div>
+            <div className="relative h-12 w-12 mr-2">
+              <Image
+                src={siteConfig.logo}
+                alt={siteConfig.name}
+                width={48}
+                height={48}
+                className="object-contain"
+                style={{
+                  filter: scrolled ? "none" : "brightness(0) invert(1)"
+                }}
+              />
             </div>
             <div className="flex flex-col">
               <span
@@ -65,7 +68,7 @@ export default function Header({ lang }: { lang: Locale }) {
                   scrolled ? "text-primary" : "text-white"
                 }`}
               >
-                {siteConfig.name.toUpperCase()}
+                {siteConfig.name.split(" ")[0].toUpperCase()}
               </span>
               <span
                 className={`text-xs font-medium tracking-wider ${
