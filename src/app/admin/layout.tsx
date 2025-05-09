@@ -1,4 +1,19 @@
-'use client';
+import { Poppins } from 'next/font/google';
+import Script from 'next/script';
+import { Metadata } from 'next';
+import '../globals.css';
+
+// Poppins fontunu kullan (Inter yerine) - daha modern görünüm için
+const poppins = Poppins({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+});
+
+export const metadata: Metadata = {
+  title: 'Admin Panel | Mt. Ararat Outdoor',
+  description: 'Mt. Ararat Outdoor Adventures yönetim paneli',
+};
 
 export default function AdminLayout({
   children,
@@ -6,36 +21,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <header className="bg-blue-800 text-white shadow">
-        <div className="container mx-auto py-4 px-6 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Mt.Ararat Admin</h1>
-          <nav>
-            <ul className="flex space-x-4">
-              <li>
-                <a href="/admin" className="hover:underline">
-                  Dashboard
-                </a>
-              </li>
-              <li>
-                <a href="/" className="hover:underline" target="_blank">
-                  Siteyi Görüntüle
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
-      
-      <main className="flex-grow">
+    <>
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" 
+        strategy="afterInteractive"
+      />
+      <div className={`${poppins.className} bg-slate-50 min-h-screen text-slate-800`}>
         {children}
-      </main>
-      
-      <footer className="bg-gray-800 text-white py-4">
-        <div className="container mx-auto px-6 text-center">
-          <p>&copy; {new Date().getFullYear()} Mt.Ararat Outdoor Admin Panel</p>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }

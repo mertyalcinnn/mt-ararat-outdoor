@@ -1,37 +1,44 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { locales, Locale } from '@/lib/i18n';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { locales, Locale } from "@/lib/i18n";
+import { siteConfig } from "@/config/site";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Mt.Ararat Outdoor Adventures',
-  description: 'Ağrı Dağı ve çevresinde outdoor aktiviteleri: kayak turu, tırmanış, deniz kaynağı, SUP ve doğa yürüyüşleri.',
+  title: siteConfig.name,
+  description: siteConfig.description,
+  icons: {
+    icon: siteConfig.favicon,
+  },
 };
 
 export function generateStaticParams() {
-  return locales.map(locale => ({ lang: locale }));
+  return locales.map((locale) => ({ lang: locale }));
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: { lang: Locale };
 }) {
+  const lang = params?.lang || "tr";
+
   return (
-    <html lang={params.lang}>
+    <html lang={lang}>
+      <head>
+        <link rel="icon" href={siteConfig.favicon} />
+      </head>
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">
-          <Header lang={params.lang} />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer lang={params.lang} />
+          <Header lang={lang} />
+          <main className="flex-grow">{children}</main>
+          <Footer lang={lang} />
         </div>
       </body>
     </html>

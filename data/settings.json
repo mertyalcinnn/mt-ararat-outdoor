@@ -1,0 +1,31 @@
+{
+  "site": {
+    "title": "Mt.Ararat Outdoor Adventures",
+    "logo": "/images/logo.png",
+    "favicon": "/favicon.ico"
+  },
+  "seo": {
+    "metaTitle": "Mt.Ararat Outdoor Adventures - Profesyonel Outdoor Aktiviteleri",
+    "metaDescription": "Ağrı Dağı ve çevresinde profesyonel rehberlerle dağcılık, tırmanış, kayak turu, yürüyüş ve deniz sporları aktiviteleri.",
+    "keywords": "Ağrı Dağı, dağcılık, tırmanış, kayak turu, outdoor, doğa yürüyüşü, Türkiye"
+  },
+  "social": {
+    "instagram": "https://instagram.com/mtararatoutdoor",
+    "facebook": "https://facebook.com/mtararatoutdoor",
+    "twitter": "https://twitter.com/mtararatoutdoor",
+    "youtube": "https://youtube.com/mtararatoutdoor"
+  },
+  "contact": {
+    "whatsapp": "+905001234567",
+    "reservationEmail": "rezervasyon@mtararatoutdoor.com"
+  },
+  "languages": {
+    "default": "tr",
+    "available": ["tr", "en", "ru"]
+  },
+  "privacy": {
+    "cookiesEnabled": true,
+    "analyticsEnabled": true,
+    "gdprCompliant": true
+  }
+}

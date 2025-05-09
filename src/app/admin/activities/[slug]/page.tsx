@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AdvancedImageUploader from '@/components/AdvancedImageUploader';
 
 interface Activity {
   title: string;
@@ -29,6 +30,10 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
     fetch(`/api/admin/activities/${slug}`)
       .then(res => res.json())
       .then(data => {
+        // Eğer aktivitenin gallery özelliği yoksa, boş bir dizi ile başlat
+        if (!data.gallery) {
+          data.gallery = [];
+        }
         setActivity(data);
         setIsLoading(false);
       })
@@ -56,7 +61,7 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
       
       if (response.ok) {
         alert('Aktivite başarıyla güncellendi!');
-        router.push('/admin');
+        router.push('/admin/dashboard/activities');
       } else {
         const errorData = await response.json();
         alert(`Hata: ${errorData.error || 'Bilinmeyen bir hata oluştu'}`);
@@ -121,7 +126,7 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
         <p>Aktivite bulunamadı</p>
         <button 
-          onClick={() => router.push('/admin')}
+          onClick={() => router.push('/admin/dashboard/activities')}
           className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
         >
           Admin Panele Dön
@@ -135,7 +140,7 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Aktivite Düzenle: {activity.title}</h1>
         <button 
-          onClick={() => router.push('/admin')}
+          onClick={() => router.push('/admin/dashboard/activities')}
           className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
         >
           Geri Dön
@@ -183,14 +188,11 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
               
               <div>
                 <label className="block mb-1 font-medium">Kapak Görseli:</label>
-                <input
-                  type="text"
-                  value={activity.coverImage}
-                  onChange={(e) => handleInputChange('coverImage', e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded"
-                  required
+                <AdvancedImageUploader
+                  onImageSelect={(url) => handleInputChange('coverImage', url)}
+                  currentImageUrl={activity.coverImage}
+                  label="Kapak Görseli"
                 />
-                <p className="text-sm text-gray-500 mt-1">Görsel yolu (örn: /images/hiking-cover.jpg)</p>
               </div>
               
               <div>
@@ -250,7 +252,7 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
                   value={activity.content}
                   onChange={(e) => handleInputChange('content', e.target.value)}
                   className="w-full border border-gray-300 p-2 rounded font-mono"
-                  rows={15}
+                  rows={20}
                   required
                 />
                 <p className="text-sm text-gray-500 mt-1">Markdown formatında içerik</p>
@@ -296,38 +298,51 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
               <label className="font-medium">Galeri Görselleri:</label>
               <button 
                 type="button"
-                onClick={() => addArrayItem('gallery', '/images/')}
+                onClick={() => addArrayItem('gallery', '')}
                 className="bg-green-500 hover:bg-green-700 text-white text-sm px-2 py-1 rounded"
               >
                 + Görsel Ekle
               </button>
             </div>
             
-            {activity.gallery.map((image, idx) => (
-              <div key={idx} className="flex items-center space-x-2 mb-2">
-                <input
-                  type="text"
-                  value={image}
-                  onChange={(e) => handleArrayChange('gallery', idx, e.target.value)}
-                  className="flex-grow border border-gray-300 p-2 rounded"
-                  placeholder="/images/ornek.jpg"
-                />
-                <button 
-                  type="button"
-                  onClick={() => removeArrayItem('gallery', idx)}
-                  className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
-                >
-                  Sil
-                </button>
-              </div>
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {activity.gallery.map((image, idx) => (
+                <div key={idx} className="border border-gray-200 p-3 rounded">
+                  <AdvancedImageUploader
+                    onImageSelect={(url) => handleArrayChange('gallery', idx, url)}
+                    currentImageUrl={image}
+                    label={`Galeri Görseli ${idx + 1}`}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => removeArrayItem('gallery', idx)}
+                    className="mt-2 bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded w-full"
+                  >
+                    Bu Görseli Kaldır
+                  </button>
+                </div>
+              ))}
+              
+              {activity.gallery.length === 0 && (
+                <div className="border border-dashed border-gray-300 p-6 rounded flex flex-col items-center justify-center text-gray-500">
+                  <p>Henüz galeri görseli eklenmemiş</p>
+                  <button 
+                    type="button"
+                    onClick={() => addArrayItem('gallery', '')}
+                    className="mt-2 bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                  >
+                    İlk Görseli Ekle
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Kaydet Butonları */}
           <div className="flex justify-end space-x-4 pt-4 border-t">
             <button 
               type="button" 
-              onClick={() => router.push('/admin')}
+              onClick={() => router.push('/admin/dashboard/activities')}
               className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
               disabled={isSaving}
             >

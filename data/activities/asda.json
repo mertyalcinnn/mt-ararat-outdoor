@@ -1,0 +1,18 @@
+{
+  "title": "tesdt",
+  "slug": "asda",
+  "description": "asdasdasd",
+  "coverImage": "",
+  "gallery": [],
+  "duration": "1",
+  "difficultyLevel": "Zor",
+  "includedServices": [
+    "Profesyonel rehberlik",
+    "Ekipman",
+    "Ulaşım"
+  ],
+  "contactWhatsapp": "",
+  "featured": false,
+  "date": "2025-05-09T12:07:50.507Z",
+  "content": "# Aktivite Hakkında\n\nAktivitenin detaylı açıklaması buraya girilecek. Bu alan Markdown formatını destekler.\n\n## Detaylar\n\n- Madde 1\n- Madde 2\n- Madde 3\n\n## Rota\n\n1. Başlangıç noktası\n2. Ara nokta\n3. Bitiş noktası\n"
+}

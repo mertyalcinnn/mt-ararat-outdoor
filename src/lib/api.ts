@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { join } from 'path';
+import { getAllActivities as getActivities, getActivityBySlug as getActivityDetail } from './activities';
 
 // JSON dosyalarını okuma
 export function getJsonData(filePath: string) {
@@ -21,28 +22,12 @@ export function getHomepageData() {
 
 // Tüm aktiviteleri getir
 export function getAllActivities() {
-  const activitiesDirectory = join(process.cwd(), 'data/activities');
-  const filenames = fs.readdirSync(activitiesDirectory);
-  
-  const activities = filenames.map(filename => {
-    const filePath = join(activitiesDirectory, filename);
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    
-    try {
-      return JSON.parse(fileContents);
-    } catch (e) {
-      console.error(`Error parsing JSON at ${filePath}:`, e);
-      return null;
-    }
-  });
-  
-  return activities.filter(Boolean);
+  return getActivities();
 }
 
 // Slug'a göre aktivite getir
 export function getActivityBySlug(slug: string) {
-  const activities = getAllActivities();
-  return activities.find(activity => activity.slug === slug);
+  return getActivityDetail(slug);
 }
 
 // Hakkımızda verilerini getir

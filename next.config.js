@@ -6,7 +6,14 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['assets.vercel.com'],
+    domains: ['assets.vercel.com', 'cdnjs.cloudflare.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdnjs.cloudflare.com',
+        pathname: '**',
+      },
+    ],
   },
   swcMinify: true,
   // Burada i18n yapılandırmasını çıkarıyoruz, çünkü App Router ile /src/app/[lang] formatını kullanıyoruz
@@ -15,6 +22,10 @@ const nextConfig = {
   typescript: {
     // CMS dosyalarındaki TypeScript hatalarını görmezden gel
     ignoreBuildErrors: true,
+  },
+  // Import alias'ları ayarla
+  experimental: {
+    scrollRestoration: true,
   },
 };
 
