@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #2D5A27;
+  --secondary: #5F8D4E;
+  --accent: #D68C45;
+  --leaf: #8B7355;
+  --dark: #1A1A1A;
+  --light: #F8F6F1;
+}
+
+body {
+  color: var(--dark);
+  background-color: #fff;
+}
+
+@layer base {
+  body {
+    @apply text-dark bg-light;
+  }
+  h1 {
+    @apply text-4xl font-bold mb-6;
+  }
+  h2 {
+    @apply text-3xl font-bold mb-4;
+  }
+  h3 {
+    @apply text-2xl font-bold mb-3;
+  }
+  h4 {
+    @apply text-xl font-bold mb-2;
+  }
+  p {
+    @apply mb-4;
+  }
+  ul {
+    @apply list-disc pl-6 mb-4;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+  }
+  
+  .section {
+    @apply py-16 md:py-24;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-md font-medium transition-all duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary/90;
+  }
+  
+  .btn-accent {
+    @apply bg-accent text-white hover:bg-accent/90;
+  }
+  
+  .btn-outline {
+    @apply border border-primary text-primary hover:bg-primary hover:text-white;
+  }
+  
+  .activity-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg;
+  }
+  
+  .nav-link {
+    @apply text-dark hover:text-primary transition-colors duration-200;
+  }
+}

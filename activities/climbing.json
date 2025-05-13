@@ -1,0 +1,23 @@
+{
+  "title": "Climbing",
+  "slug": "climbing",
+  "description": "Ağrı Dağı'nın zirvesine tırmanma macerası",
+  "content": "# Ağrı Dağı Tırmanışıssss\n\nAğrı Dağı (5.137m), Türkiye'nin en yüksek dağı olarak eşsiz bir tırmanış deneyimi sunar. Farklı zorluk seviyelerine sahip rotalarla hem acemi hem de deneyimli dağcılara hitap eder.\n\n## Tırmanış Detayları\n\n- Standart rota (Doğu Yüzü): Daha az teknik, başlangıç seviyesindeki dağcılar için uygundur\n- Kuzey rotası: Daha teknik, deneyimli dağcılar için\n- Zirve yüksekliği: 5.137 metre\n\n## Tırmanış Sezonu\n\nTemmuz-Eylül ayları arası en uygun tırmanış dönemidir. Bu dönemde hava koşulları daha stabil olur.",
+  "coverImage": "/images/climbing-cover.jpg",
+  "gallery": [
+    "/images/climbing-1.jpg",
+    "/images/climbing-2.jpg",
+    "/images/climbing-3.jpg"
+  ],
+  "duration": "3-5 gün",
+  "difficultyLevel": "Zor",
+  "includedServices": [
+    "Profesyonel dağ rehberi",
+    "Tırmanış ekipmanları",
+    "Kamp ekipmanları",
+    "Yemekler",
+    "Ulaşım"
+  ],
+  "contactWhatsapp": "+905001234567",
+  "featured": true
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Ayşe Yılmaz",
+    "quote": "Mt.Ararat Outdoor ile Ağrı Dağı'na tırmanmak hayatımın en unutulma deneyimlerinden biriydi. Profesyonel rehberler ve güvenlik önlemleri sayesinde kendimi çok rahat hissettim.",
+    "avatar": "/images/placeholder-image.jpg",
+    "activity": "Climbing"
+  },
+  {
+    "name": "Mehmet Kaya",
+    "quote": "Kayak turları için daha önce birçok firma ile çalıştım ama Mt.Ararat'ın hizmeti ve rehberlerinin bilgisi gerçekten üst düzeydi. Bakir kayak rotaları tam aradığım macera!",
+    "avatar": "/images/placeholder-image.jpg",
+    "activity": "Ski Touring"
+  },
+  {
+    "name": "Elena Petrova",
+    "quote": "The hiking experience with Mt.Ararat Outdoor was exceptional. The guides were knowledgeable about the local flora and fauna, and the views were breathtaking. Highly recommended!",
+    "avatar": "/images/placeholder-image.jpg",
+    "activity": "Hiking"
+  }
+]

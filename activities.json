@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Ski Touring",
+    "slug": "ski-touring",
+    "description": "Ağrı Dağı'nın eşsiz kar manzaralarında kayak turu deneyimi",
+    "content": "# Ağrı Dağı'nda Kayak Turu\n\nMt.Ararat, kış aylarında muhteşem bir kayak turu destinasyonudur. Karla kaplı yamaçlarda, rehberler eşliğinde yapacağınız kayak turları ile doğayla iç içe bir deneyim yaşayacaksınız.\n\n## Kayak Turu Özellikleri\n\n- Profesyonel rehberler eşliğinde güvenli tur\n- Farklı zorluklardaki rotalar\n- Nefes kesici manzaralar\n- Özel ekipman desteği\n\n## En İyi Dönem\n\nAralık-Nisan ayları arasında, kar koşullarına göre turlar düzenlenmektedir.",
+    "coverImage": "/images/ski-touring-cover.jpg",
+    "gallery": [
+      "/images/ski-touring-1.jpg",
+      "/images/ski-touring-2.jpg",
+      "/images/ski-touring-3.jpg"
+    ],
+    "duration": "1-3 gün",
+    "difficultyLevel": "Orta",
+    "includedServices": [
+      "Profesyonel rehberlik",
+      "Güvenlik ekipmanları",
+      "Te
