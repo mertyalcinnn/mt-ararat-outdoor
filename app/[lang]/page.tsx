@@ -26,7 +26,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
 
   try {
     // Veri yükleme işlemlerini try-catch içine alalım
-    let homeData = {};
+    let homeData: any = {};
     try {
       homeData = await getHomepageData() || {
         heroImage: "/images/hero-fallback.jpg", // varsayılan bir resim yolu
@@ -39,7 +39,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     }
     
     // Aktiviteleri almayı deneyelim
-    let activities = [];
+    let activities: any[] = [];
     try {
       activities = await getAllActivities();
       console.log(`${activities.length} aktivite başarıyla yüklendi`);
@@ -49,7 +49,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     }
     
     // Diğer verileri alalım
-    let testimonials = [];
+    let testimonials: Testimonial[] = [];
     try {
       testimonials = await getTestimonials() as Testimonial[] || [];
     } catch (testimonialsError) {

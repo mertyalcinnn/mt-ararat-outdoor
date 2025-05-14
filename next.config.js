@@ -6,10 +6,6 @@ const nextConfig = {
   },
   // Vercel için basit yapılandırma
   swcMinify: true,
-  // Server Actions için gerekli ayar
-  experimental: {
-    serverActions: true,
-  },
   // ISR değerleri için herhangi bir değer belirtmiyoruz
   webpack: (config) => {
     return config;

@@ -1,7 +1,7 @@
 #!/bin/bash
-# Bu script, Next.js sunucu hatalarını düzeltmek için uygulanacak değişiklikleri kaydeder ve uzak repoya gönderir.
+# Bu script, Next.js TypeScript hatalarını düzeltmek için uygulanacak değişiklikleri kaydeder ve uzak repoya gönderir.
 
-echo "Mt. Ararat Outdoor 500 Server Hatası Düzeltme Script'i"
+echo "Mt. Ararat Outdoor TypeScript Hatası Düzeltme Script'i"
 echo "======================================================"
 
 # Mevcut branch'i al
@@ -14,7 +14,7 @@ git add .
 
 # Değişiklikleri commit et
 echo "Değişiklikleri commit ediyor..."
-git commit -m "Fix 500 server errors: Add robust error handling and force-dynamic exports"
+git commit -m "Fix TypeScript errors: Add proper type annotations and remove experimental serverActions"
 
 # Uzak repoya push et
 echo "Değişiklikleri push ediyor..."
