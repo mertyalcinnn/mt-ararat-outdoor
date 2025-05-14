@@ -1,16 +1,39 @@
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
-// Bu sayfa, kök dizin (/) için bir yönlendirme sağlar
+// Bu sayfa, kök dizin (/) için bir yönlendirme sayfası sağlar
 export default function RootPage() {
-  // Kullanıcıyı varsayılan dil olan tr'ye yönlendir
-  redirect('/tr');
-  
-  // Not: Bu return ifadesi asla çalışmayacak çünkü redirect işlevi sayfayı hemen yönlendirir
-  // Vercel serverless yapısı için ise null yerine bunu ekleyelim
+  // Next.js 13 ile redirect komponenı direkt olarak render edilemiyor
+  // Bu nedenle bir yönlendirme sayfası gösteriyoruz
   return (
-    <div>
-      <h1>Yönlendiriliyor...</h1>
-      <p>Lütfen bekleyin, varsayılan dil sayfasına yönlendiriliyorsunuz.</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <main className="bg-white p-8 rounded-lg shadow-md text-center">
+        <h1 className="text-3xl font-bold mb-4">Mt. Ararat Outdoor Adventures</h1>
+        
+        <p className="mb-8 text-lg">Lütfen bir dil seçin / Please select a language / Пожалуйста, выберите язык</p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link 
+            href="/tr" 
+            className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Türkçe
+          </Link>
+          
+          <Link 
+            href="/en" 
+            className="px-8 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            English
+          </Link>
+          
+          <Link 
+            href="/ru" 
+            className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Русский
+          </Link>
+        </div>
+      </main>
     </div>
   );
 }

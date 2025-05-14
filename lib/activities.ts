@@ -6,6 +6,50 @@ import matter from 'gray-matter';
 const contentDir = path.join(process.cwd(), 'content', 'activities');
 const dataDir = path.join(process.cwd(), 'data', 'activities');
 
+// Kök 'activities' dizinindeki aktiviteleri oku
+export function getRootActivities() {
+  try {
+    const activitiesDir = path.join(process.cwd(), 'activities');
+    if (!fs.existsSync(activitiesDir)) {
+      console.log(`'activities' kök dizini bulunamadı!`);
+      return [];
+    }
+
+    console.log(`Kök 'activities' dizininden aktiviteler okunuyor...`);
+    
+    // Dosyaları oku
+    const fileNames = fs.readdirSync(activitiesDir);
+    const jsonFiles = fileNames.filter(file => file.endsWith('.json'));
+    
+    if (jsonFiles.length === 0) {
+      console.log(`Kök 'activities' dizininde JSON dosyası bulunamadı`);
+      return [];
+    }
+    
+    console.log(`Kök dizinden ${jsonFiles.length} JSON aktivite dosyası bulundu.`);
+    
+    const activities = jsonFiles.map(fileName => {
+      try {
+        const filePath = path.join(activitiesDir, fileName);
+        const fileContents = fs.readFileSync(filePath, 'utf8');
+        
+        const data = JSON.parse(fileContents);
+        return data;
+      } catch (error) {
+        console.error(`${fileName} dosyası JSON olarak ayrıştırılamadı:`, error);
+        return null;
+      }
+    });
+    
+    const validActivities = activities.filter(Boolean);
+    console.log(`Kök 'activities' dizininden ${validActivities.length} geçerli JSON aktivite bulundu.`);
+    return validActivities;
+  } catch (error) {
+    console.error(`'activities' kök dizininden aktiviteler okunurken hata:`, error);
+    return [];
+  }
+}
+
 // Markdown aktiviteleri oku
 export function getAllMarkdownActivities() {
   try {
@@ -67,6 +111,21 @@ export function getAllJsonActivities() {
       } catch (error) {
         console.error('Aktivite dizini oluşturulamadı:', error);
         return [];
+      }
+    }
+
+    // 'activities' dizini var mı kontrol et
+    const activitiesDir = path.join(process.cwd(), 'activities');
+    if (fs.existsSync(activitiesDir)) {
+      console.log(`'activities' dizininden JSON dosyaları da kontrol ediliyor...`);
+      try {
+        const rootFileNames = fs.readdirSync(activitiesDir);
+        const rootJsonFiles = rootFileNames.filter(file => file.endsWith('.json'));
+        if (rootJsonFiles.length > 0) {
+          console.log(`'activities' dizininde ${rootJsonFiles.length} JSON aktivite bulundu.`);
+        }
+      } catch (rootError) {
+        console.error(`'activities' dizini okunamadı:`, rootError);
       }
     }
 
@@ -207,9 +266,21 @@ export function getAllActivities() {
   try {
     console.log('activities.ts: getAllActivities fonksiyonu çağrılıyor...');
     
-    // Sonra JSON dosyalarından oku
+    // Önce kök activities dizininden okumayı dene
     try {
-      console.log('JSON dosyalarından aktiviteler okunuyor...');
+      console.log('Kök activities dizininden JSON aktiviteler okunuyor...');
+      const rootActivities = getRootActivities();
+      if (rootActivities && rootActivities.length > 0) {
+        console.log(`Kök dizinden ${rootActivities.length} aktivite başarıyla okundu.`);
+        return rootActivities;
+      }
+    } catch (rootError) {
+      console.error('Kök activities dizini okuma hatası:', rootError);
+    }
+    
+    // Sonra data/activities dizininden oku
+    try {
+      console.log('data/activities dizininden JSON aktiviteler okunuyor...');
       const activities = getAllJsonActivities();
       
       // Dizi kontrolü
@@ -218,7 +289,7 @@ export function getAllActivities() {
         return [];
       }
       
-      console.log(`JSON dosyalarından ${activities.length} aktivite okundu`);
+      console.log(`data/activities dizininden ${activities.length} aktivite okundu`);
       return activities;
     } catch (readError) {
       console.error('JSON aktiviteleri okuma hatası:', readError);
