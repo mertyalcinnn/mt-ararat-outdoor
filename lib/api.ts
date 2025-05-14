@@ -52,7 +52,7 @@ export async function getAllActivities() {
     // Dosya sisteminden veri al
     try {
       console.log('Dosya sisteminden veri alınıyor...');
-      fileActivities = getActivitiesFromFile();
+      fileActivities = await getActivitiesFromFile();
       console.log(`Dosya sisteminden ${fileActivities.length} aktivite alındı.`);
     } catch (fileErr) {
       console.error('Dosya sistemi veri alımında hata:', fileErr);
@@ -98,7 +98,7 @@ export async function getActivityBySlug(slug: string) {
     
     // MongoDB'den alınamazsa dosya sisteminden oku
     try {
-      activity = getActivityDetailFromFile(slug);
+      activity = await getActivityDetailFromFile(slug);
       if (activity) {
         console.log(`${slug} aktivitesi dosya sisteminden alındı.`);
         return activity;
