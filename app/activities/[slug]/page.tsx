@@ -3,6 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import ActivityGalleryClient from '../../../components/ActivityGalleryClient';
 import { getActivityBySlug, getAllActivities } from '../../../lib/api';
 
+// Bu sayfa dynamic olarak işaretleniyor
+export const dynamic = 'force-dynamic';
+
 // Vercel build için statik olarak boş bir slug listesi oluştur
 // Build sırasındaki hata için geçici çözüm
 export async function generateStaticParams() {

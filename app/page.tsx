@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+// Bu sayfa dynamic olarak işaretleniyor
+export const dynamic = 'force-dynamic';
+
 // Bu sayfa, kök dizin (/) için bir yönlendirme sayfası sağlar
 export default function RootPage() {
   // Next.js 13 ile redirect komponenı direkt olarak render edilemiyor

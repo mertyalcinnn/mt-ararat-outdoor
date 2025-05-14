@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 
+// Bu route'un dynamic olduğunu belirt
+export const dynamic = 'force-dynamic';
+
 // Bu API endpoint'i, Next.js önbelleğini temizler
 export async function GET(request: NextRequest) {
   try {

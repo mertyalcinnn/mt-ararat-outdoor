@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 
+// Bu route'un dynamic olduğunu belirt
+export const dynamic = 'force-dynamic';
+
 // Bu endpoint gelişmiş revalidation işlemlerini yapacak
 export async function GET(request: NextRequest) {
   try {

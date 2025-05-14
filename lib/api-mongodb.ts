@@ -22,12 +22,30 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     return { client: cachedClient, db: cachedDb };
   }
 
+  // MONGODB_URI kontrolü
+  if (!MONGODB_URI) {
+    console.error('MongoDB URI tanımlanmamış. Varsayılan DB kullanılacak.');
+    // Boş başarısız bağlantı döndür
+    return { client: null as any, db: null as any };
+  }
+
   // Yeni bağlantı oluştur
   try {
     console.log('MongoDB bağlantısı kuruluyor...');
     const client = new MongoClient(MONGODB_URI!);
-    await client.connect();
+    
+    // 5 saniye timeout ile bağlantı kur
+    const connectPromise = client.connect();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('MongoDB bağlantı zaman aşımı')), 5000);
+    });
+    
+    await Promise.race([connectPromise, timeoutPromise]);
+    
     const db = client.db(MONGODB_DB);
+    
+    // Basit kontrol yap - db erişilebilir mi
+    await db.command({ ping: 1 });
     
     // Bağlantıyı önbelleğe al
     cachedClient = client;
@@ -37,7 +55,10 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     return { client, db };
   } catch (error) {
     console.error('MongoDB bağlantı hatası:', error);
-    throw new Error(`MongoDB bağlantı hatası: ${error instanceof Error ? error.message : String(error)}`);
+    // Hata durumunda boş nesneler döndür, böylece uygulama çökmez
+    cachedClient = null;
+    cachedDb = null;
+    return { client: null as any, db: null as any };
   }
 }
 
@@ -106,6 +127,25 @@ export async function deleteOne(
 export async function getAllActivitiesFromDB() {
   try {
     console.log('MongoDB\'den tüm aktiviteler alınıyor...');
+    const { db } = await connectToDatabase();
+    
+    // db nesnesi null ise, bağlantı başarısız olmuş demektir
+    if (!db) {
+      console.warn('MongoDB bağlantısı kurulamadı, boş dizi döndürülüyor');
+      return [];
+    }
+    
+    // Boş koleksiyon oluşturma sorgusu
+    try {
+      const collections = await db.listCollections({ name: 'activities' }).toArray();
+      if (collections.length === 0) {
+        console.log('activities koleksiyonu bulunamadı, oluşturuluyor...');
+        await db.createCollection('activities');
+      }
+    } catch (collErr) {
+      console.error('Koleksiyon kontrolu sırasında hata:', collErr);
+    }
+    
     const activities = await find('activities');
     // _id alanını JSON serileştirmede sorun yaratmaması için temizle
     return activities.map(activity => {
