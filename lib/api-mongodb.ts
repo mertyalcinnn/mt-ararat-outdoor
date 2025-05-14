@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection, Document } from 'mongodb';
+import { MongoClient, Db, Collection, Document, WithId } from 'mongodb';
 
 // MongoDB bağlantı bilgileri
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -44,7 +44,7 @@ export async function find<T extends Document>(
   collection: string,
   query = {},
   options = {}
-): Promise<T[]> {
+): Promise<WithId<T>[]> {
   try {
     const { db } = await connectToDatabase();
     return await db.collection<T>(collection).find(query, options).toArray();
@@ -58,7 +58,7 @@ export async function find<T extends Document>(
 export async function findOne<T extends Document>(
   collection: string,
   query = {}
-): Promise<T | null> {
+): Promise<WithId<T> | null> {
   try {
     const { db } = await connectToDatabase();
     return await db.collection<T>(collection).findOne(query);
@@ -104,7 +104,12 @@ export async function deleteOne(
 export async function getAllActivitiesFromDB() {
   try {
     console.log('MongoDB\'den tüm aktiviteler alınıyor...');
-    return await find('activities');
+    const activities = await find('activities');
+    // _id alanını JSON serileştirmede sorun yaratmaması için temizle
+    return activities.map(activity => {
+      const { _id, ...rest } = activity;
+      return rest;
+    });
   } catch (error) {
     console.error('MongoDB\'den aktiviteler alınamadı:', error);
     return [];
@@ -115,7 +120,15 @@ export async function getAllActivitiesFromDB() {
 export async function getActivityBySlugFromDB(slug: string) {
   try {
     console.log(`MongoDB\'den ${slug} aktivitesi alınıyor...`);
-    return await findOne('activities', { slug });
+    const activity = await findOne('activities', { slug });
+    
+    if (activity) {
+      // _id alanını JSON serileştirmede sorun yaratmaması için temizle
+      const { _id, ...rest } = activity;
+      return rest;
+    }
+    
+    return null;
   } catch (error) {
     console.error(`MongoDB\'den ${slug} aktivitesi alınamadı:`, error);
     return null;
