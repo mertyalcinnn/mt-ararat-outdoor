@@ -5,6 +5,10 @@ import { Locale } from "../../lib/i18n";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Sayfa önbelleğini devre dışı bırak
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export function generateStaticParams() {
   return [{ lang: 'tr' }, { lang: 'en' }, { lang: 'ru' }];
 }

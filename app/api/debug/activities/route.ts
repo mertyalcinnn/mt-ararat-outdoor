@@ -3,6 +3,14 @@ import { getAllActivitiesFromDB } from '@/lib/api-mongodb';
 import { getAllActivities } from '@/lib/activities';
 import { revalidatePath } from 'next/cache';
 
+// Aktivite türü
+interface Activity {
+  slug: string;
+  title: string;
+  description: string;
+  [key: string]: any; // Diğer özellikler için esnek yapı
+}
+
 // Bu endpoint, aktiviteleri farklı kaynaklardan döndürür ve sorun giderme için kullanılır
 export async function GET(request: NextRequest) {
   try {
@@ -10,8 +18,8 @@ export async function GET(request: NextRequest) {
     const source = request.nextUrl.searchParams.get('source');
     const revalidate = request.nextUrl.searchParams.get('revalidate') === 'true';
     
-    let activitiesFromMongo = [];
-    let activitiesFromFiles = [];
+    let activitiesFromMongo: Activity[] = [];
+    let activitiesFromFiles: Activity[] = [];
     
     // MongoDB'den veri al
     try {
@@ -23,7 +31,7 @@ export async function GET(request: NextRequest) {
     
     // Dosyalardan veri al
     try {
-      activitiesFromFiles = getAllActivities();
+      activitiesFromFiles = getAllActivities() as Activity[];
       console.log(`Dosyalardan gelen aktivite sayısı: ${activitiesFromFiles.length}`);
     } catch (fileError) {
       console.error('Dosya veri alma hatası:', fileError);

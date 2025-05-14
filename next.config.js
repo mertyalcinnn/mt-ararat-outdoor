@@ -4,12 +4,10 @@ const nextConfig = {
   images: {
     domains: ['via.placeholder.com'],
   },
-  // output: 'standalone', // Vercel için bu ayarı kaldırıyoruz
-  experimental: {
-    // isrMemoryCacheSize: 0, // ISR bellek önbelleği sorunlarına neden olabilir
-    serverComponentsExternalPackages: []
-  },
-  // PostCSS'i manuel yapılandırma
+  // Vercel için basit yapılandırma
+  swcMinify: true,
+  // ISR değerleri için herhangi bir değer belirtmiyoruz
+  // Tüm deneysel özellikleri kaldırıyoruz
   webpack: (config) => {
     return config;
   }

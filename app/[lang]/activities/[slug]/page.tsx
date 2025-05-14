@@ -9,6 +9,8 @@ import { getDictionary } from '../../../../dictionaries';
 
 // Sayfa yenileme için revalidate değeri (saniye cinsinden) - 0 = Her istekte yeniden oluştur
 export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 // Vercel build için statik olarak boş bir slug listesi oluştur
 // Build sırasındaki hata için geçici çözüm

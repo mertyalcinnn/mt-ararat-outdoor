@@ -6,5 +6,11 @@ export default function RootPage() {
   redirect('/tr');
   
   // Not: Bu return ifadesi asla çalışmayacak çünkü redirect işlevi sayfayı hemen yönlendirir
-  return null;
+  // Vercel serverless yapısı için ise null yerine bunu ekleyelim
+  return (
+    <div>
+      <h1>Yönlendiriliyor...</h1>
+      <p>Lütfen bekleyin, varsayılan dil sayfasına yönlendiriliyorsunuz.</p>
+    </div>
+  );
 }

@@ -15,8 +15,10 @@ interface Testimonial {
   activity: string;
 }
 
-// Sayfa yenileme stratejisi - 1 saat cache
-export const revalidate = 3600;
+// Sayfa yenileme stratejisi - Her istekte yeniden oluştur
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export default async function Home({ params }: { params: { lang: Locale } }) {
   // Dil parametresini güvenli bir şekilde al
