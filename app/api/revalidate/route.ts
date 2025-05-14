@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       message: 'Sayfalar yeniden oluşturulacak',
       path: pathToRevalidate || 'all',
       date: new Date().toISOString()
-    });}
+    });
   } catch (err) {
     // Hata durumunda
     return NextResponse.json({
