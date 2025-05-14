@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     
     // Dosyalardan veri al
     try {
-      activitiesFromFiles = getAllActivities() as Activity[];
+      activitiesFromFiles = await getAllActivities() as Activity[];
       console.log(`Dosyalardan gelen aktivite sayısı: ${activitiesFromFiles.length}`);
     } catch (fileError) {
       console.error('Dosya veri alma hatası:', fileError);
