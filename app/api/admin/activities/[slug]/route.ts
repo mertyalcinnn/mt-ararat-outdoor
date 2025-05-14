@@ -6,12 +6,51 @@ import { syncActivityToJson, deleteActivityJson } from '@/lib/activities';
 async function revalidatePages() {
   console.log('Sayfalar yeniden oluşturuluyor...');
   try {
-    // Next.js API route içinden doğrudan revalidatePath kullanamayız
-    // Bu nedenle revalidate API'sini çağırıyoruz
-    const revalidateResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/revalidate`);
-    const result = await revalidateResponse.json();
-    console.log('Revalidate sonucu:', result);
-    return result;
+    // NEXT_PUBLIC_SITE_URL değerini kontrol et
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    console.log(`NEXT_PUBLIC_SITE_URL: ${siteUrl || 'TANIMLANMAMIŞ'}`);
+    
+    // Tüm olası revalidate API'lerini dene
+    const revalidationEndpoints = [
+      // Birincil revalidation API
+      `${siteUrl}/api/revalidate`,
+      // Yedek olarak force-revalidate API
+      `${siteUrl}/api/force-revalidate`,
+      // Son çare olarak clear-cache API
+      `${siteUrl}/api/clear-cache`
+    ];
+    
+    // Göreli yollar için alternatif API'ler
+    if (!siteUrl) {
+      revalidationEndpoints.push('/api/revalidate');
+      revalidationEndpoints.push('/api/force-revalidate');
+      revalidationEndpoints.push('/api/clear-cache');
+    }
+    
+    // Birden fazla revalidation API'sini dene
+    for (const endpoint of revalidationEndpoints) {
+      try {
+        console.log(`${endpoint} çağrılıyor...`);
+        
+        const revalidateResponse = await fetch(endpoint, {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000) // 5 saniye timeout
+        });
+        
+        if (revalidateResponse.ok) {
+          const result = await revalidateResponse.json();
+          console.log(`${endpoint} başarılı:`, result);
+          return result;
+        } else {
+          console.error(`${endpoint} hata döndü: ${revalidateResponse.status}`);
+        }
+      } catch (endpointError) {
+        console.error(`${endpoint} çağrılamadı:`, endpointError);
+      }
+    }
+    
+    // Hiçbir API çalışmadıysa
+    return null;
   } catch (error) {
     console.error('Revalidate hatası:', error);
     return null;

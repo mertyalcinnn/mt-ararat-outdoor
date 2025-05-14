@@ -29,6 +29,9 @@ export function getHomepageData() {
 // Tüm aktiviteleri getir - MongoDB'den alma işlemi ekle
 export async function getAllActivities() {
   try {
+    // NO-STORE özelliği - her istekte yeni veri al
+    const cacheHeaders = { cache: 'no-store' };
+    
     console.log('getAllActivities: Aktiviteler alınıyor...');
     
     // Her iki kaynaktan da aktiviteleri al ve birleştir
