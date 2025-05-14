@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
     try {
       const mongoData = await getAllActivitiesFromDB();
       // MongoDB verilerinin Activity türüne uygunluğunu kontrol ediyoruz
-      activitiesFromMongo = mongoData.map(item => ({
-        slug: item.slug || '',
-        title: item.title || '',
-        description: item.description || '',
+      activitiesFromMongo = mongoData.map((item: any) => ({
+        slug: item?.slug || '',
+        title: item?.title || '',
+        description: item?.description || '',
         ...item // Diğer tüm özellikleri de ekle
       }));
       console.log(`MongoDB'den gelen aktivite sayısı: ${activitiesFromMongo.length}`);

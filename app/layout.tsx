@@ -9,7 +9,13 @@ import { siteConfig } from "../config/site";
 // ÜST DÜZEY DYNAMIC EXPORT KALDIRILDI - KRİTİK API ROTALARINA TAŞINDI
 // export const dynamic = 'force-dynamic';
 
-const inter = Inter({ subsets: ["latin"] });
+// Font yükleme hata yönetimi ile
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',  // Font yüklenene kadar sistem fontu göster
+  fallback: ['system-ui', 'Arial', 'sans-serif'],  // Fallback fontlar
+  adjustFontFallback: true  // Otomatik en iyi fallback seç
+});
 
 export const metadata: Metadata = {
   title: siteConfig.name,

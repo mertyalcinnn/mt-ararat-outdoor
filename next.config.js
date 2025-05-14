@@ -6,11 +6,6 @@ const nextConfig = {
   },
   // Vercel için basit yapılandırma
   swcMinify: true,
-  // Vercel için runtime ayarı
-  experimental: {
-    // Edge runtime'a geçiş (daha hızlı ve hafif)
-    runtime: 'nodejs',
-  },
   // ISR değerleri için herhangi bir değer belirtmiyoruz
   webpack: (config) => {
     return config;
