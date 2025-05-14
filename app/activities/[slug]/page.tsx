@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
-import ActivityGallery from '@/components/ActivityGallery';
-import { getActivityBySlug, getAllActivities } from '@/lib/api';
+import ActivityGalleryClient from '../../../components/ActivityGalleryClient';
+import { getActivityBySlug, getAllActivities } from '../../../lib/api';
 
 // Vercel build için statik olarak boş bir slug listesi oluştur
 // Build sırasındaki hata için geçici çözüm
@@ -65,7 +65,7 @@ export default async function ActivityPage({ params }: { params: { slug: string 
                 {activity.gallery && activity.gallery.length > 0 && (
                   <div className="mt-12">
                     <h2 className="text-2xl font-bold mb-6">Galeri</h2>
-                    <ActivityGallery images={activity.gallery} title={activity.title} />
+                    <ActivityGalleryClient images={activity.gallery} title={activity.title} />
                   </div>
                 )}
               </div>
@@ -95,11 +95,6 @@ export default async function ActivityPage({ params }: { params: { slug: string 
                         </ul>
                       </div>
                     )}
-                    
-                    <div>
-                      <h4 className="font-semibold text-dark/70">Fiyat</h4>
-                      <p className="text-lg font-bold text-primary">{activity.price}</p>
-                    </div>
                   </div>
                   
                   <div className="mt-6">

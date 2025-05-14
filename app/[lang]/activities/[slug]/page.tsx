@@ -2,10 +2,47 @@ import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
 import Link from 'next/link';
-import ActivityGallery from '../../../../components/ActivityGallery';
+import ActivityGalleryClient from '../../../../components/ActivityGalleryClient';
 import { getActivityBySlug, getAllActivities } from '../../../../lib/api';
 import { Locale } from '../../../../lib/i18n';
-import { getDictionary } from '../../../../dictionaries';
+
+// getTranslations fonksiyonu
+function getTranslatedText(lang: Locale) {
+  const translations = {
+    tr: {
+      viewMore: "Tüm Aktiviteler",
+      gallery: "Galeri",
+      activityDetails: "Aktivite Detayları",
+      duration: "Süre",
+      difficulty: "Zorluk Seviyesi",
+      includedServices: "Dahil Olan Hizmetler",
+      reservation: "Rezervasyon Yap",
+      exploreActivities: "Diğer Aktivitelerimizi Keşfedin"
+    },
+    en: {
+      viewMore: "All Activities",
+      gallery: "Gallery",
+      activityDetails: "Activity Details",
+      duration: "Duration",
+      difficulty: "Difficulty Level",
+      includedServices: "Included Services",
+      reservation: "Make Reservation",
+      exploreActivities: "Explore Our Other Activities"
+    },
+    ru: {
+      viewMore: "Все Мероприятия",
+      gallery: "Галерея",
+      activityDetails: "Детали Мероприятия",
+      duration: "Продолжительность",
+      difficulty: "Уровень Сложности",
+      includedServices: "Включенные Услуги",
+      reservation: "Забронировать",
+      exploreActivities: "Изучите Наши Другие Мероприятия"
+    }
+  };
+  
+  return translations[lang] || translations.tr;
+}
 
 // Sayfa yenileme için revalidate değeri (saniye cinsinden) - 0 = Her istekte yeniden oluştur
 export const revalidate = 0;
@@ -39,8 +76,7 @@ export async function generateStaticParams() {
 export default async function ActivityPage({ params }: { params: { slug: string, lang: Locale } }) {
   try {
     const activity = await getActivityBySlug(params.slug);
-    const dictionary = getDictionary(params.lang);
-    const { navigation } = dictionary;
+    const t = getTranslatedText(params.lang);
     
     if (!activity) {
       notFound();
@@ -76,30 +112,30 @@ export default async function ActivityPage({ params }: { params: { slug: string,
                 
                 {activity.gallery && activity.gallery.length > 0 && (
                   <div className="mt-12">
-                    <h2 className="text-2xl font-bold mb-6">Galeri</h2>
-                    <ActivityGallery images={activity.gallery} title={activity.title} />
+                    <h2 className="text-2xl font-bold mb-6">{t.gallery}</h2>
+                    <ActivityGalleryClient images={activity.gallery} title={activity.title} />
                   </div>
                 )}
               </div>
               
               <div>
                 <div className="bg-light rounded-lg shadow-md p-6 sticky top-24">
-                  <h3 className="text-xl font-bold mb-4">Aktivite Detayları</h3>
+                  <h3 className="text-xl font-bold mb-4">{t.activityDetails}</h3>
                   
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold text-dark/70">Süre</h4>
+                      <h4 className="font-semibold text-dark/70">{t.duration}</h4>
                       <p>{activity.duration}</p>
                     </div>
                     
                     <div>
-                      <h4 className="font-semibold text-dark/70">Zorluk Seviyesi</h4>
+                      <h4 className="font-semibold text-dark/70">{t.difficulty}</h4>
                       <p>{activity.difficultyLevel}</p>
                     </div>
                     
                     {activity.includedServices && activity.includedServices.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-dark/70">Dahil Olan Hizmetler</h4>
+                        <h4 className="font-semibold text-dark/70">{t.includedServices}</h4>
                         <ul className="list-disc pl-5 mt-2">
                           {activity.includedServices.map((service: string, index: number) => (
                             <li key={index}>{service}</li>
@@ -107,8 +143,6 @@ export default async function ActivityPage({ params }: { params: { slug: string,
                         </ul>
                       </div>
                     )}
-                    
-
                   </div>
                   
                   <div className="mt-6">
@@ -124,7 +158,7 @@ export default async function ActivityPage({ params }: { params: { slug: string,
                           <path d="M13.398 20.997h-.004c-1.839-.001-3.649-.47-5.24-1.358l-.376-.224-3.895 1.021 1.04-3.798-.246-.391c-.975-1.553-1.492-3.34-1.492-5.16.001-5.357 4.363-9.719 9.722-9.719 2.598.001 5.039 1.013 6.873 2.85 1.835 1.837 2.846 4.278 2.845 6.876-.001 5.356-4.363 9.719-9.72 9.719z" fillRule="evenodd"></path>
                           <path d="M11.996 2.268c-4.695 0-8.517 3.823-8.518 8.52-.001 1.609.45 3.179 1.303 4.533l-1.386 5.059 5.176-1.357c1.305.711 2.778 1.086 4.275 1.086 4.694 0 8.516-3.823 8.517-8.52 0-2.277-.887-4.416-2.498-6.029s-3.752-2.501-6.029-2.501l.16-.141zm-5.207 18.018l.002-.004.001-.002z" fill="none"></path>
                         </svg>
-                        {params.lang === 'tr' ? 'Rezervasyon Yap' : params.lang === 'en' ? 'Make Reservation' : 'Забронировать'}
+                        {t.reservation}
                       </a>
                     )}
                   </div>
@@ -136,9 +170,9 @@ export default async function ActivityPage({ params }: { params: { slug: string,
         
         <section className="section bg-light">
           <div className="container-custom text-center">
-            <h2 className="text-3xl font-bold mb-6">Diğer Aktivitelerimizi Keşfedin</h2>
+            <h2 className="text-3xl font-bold mb-6">{t.exploreActivities}</h2>
             <Link href={`/${params.lang}/activities`} className="btn btn-outline">
-              {navigation.activities}
+              {t.viewMore}
             </Link>
           </div>
         </section>
