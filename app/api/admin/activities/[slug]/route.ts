@@ -2,6 +2,50 @@ import { NextRequest, NextResponse } from 'next/server';
 import { findOne, updateOne, deleteOne } from '@/lib/mongodb';
 import { syncActivityToJson, deleteActivityJson } from '@/lib/activities';
 
+// API rotasını dinamik olarak işaretle
+export const dynamic = 'force-dynamic';
+
+// Vercel derleme hatalarını önlemek için revalidate süresini 0 olarak belirle
+// Bu, sayfanın her istekte yeniden oluşturulmasını sağlar
+export const revalidate = 0;
+
+// Dinamik API'ler için Next.js tarafından gereken yapılandırma
+export const fetchCache = 'force-no-store';
+
+// Bu dosya için gereken tüm dinamik parametreleri oluştur
+export async function generateStaticParams() {
+  try {
+    // Aktivite sluglarını getir (vercel derleme için)
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Aktivite dosyalarının bulunduğu dizini kontrol et
+    const activityDir = path.join(process.cwd(), 'data', 'activities');
+    
+    // Dizin yoksa veya erişilemiyorsa boş dizi dön
+    if (!fs.existsSync(activityDir)) {
+      console.log('Aktivite dizini bulunamadı, boş slug listesi döndürülüyor');
+      return [];
+    }
+    
+    // JSON dosyalarını bul
+    const files = fs.readdirSync(activityDir);
+    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    
+    // Slug parametrelerini oluştur
+    const params = jsonFiles.map(file => ({
+      slug: file.replace('.json', '')
+    }));
+    
+    console.log(`${params.length} adet aktivite slugı oluşturuldu`);
+    return params;
+  } catch (error) {
+    console.error('Slug parametreleri oluşturulurken hata:', error);
+    // Herhangi bir hata durumunda boş dizi döndür
+    return [];
+  }
+}
+
 // Revalidate fonksiyonu - önbelleği temizler
 async function revalidatePages() {
   console.log('Sayfalar yeniden oluşturuluyor...');

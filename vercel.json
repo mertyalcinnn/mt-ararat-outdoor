@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "next build",
   "devCommand": "next dev",
-  "outputDirectory": "out",
+  "outputDirectory": ".next",
   "framework": "nextjs",
   "regions": ["fra1"],
   "rewrites": [
