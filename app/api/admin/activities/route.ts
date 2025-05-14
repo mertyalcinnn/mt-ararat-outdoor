@@ -5,6 +5,19 @@ import { getAllActivities } from '@/lib/activities';
 // API route'un dynamic olduğunu belirt
 export const dynamic = 'force-dynamic';
 
+// Vercel derleme hatalarını önlemek için revalidate süresini 0 olarak belirle
+export const revalidate = 0;
+
+// Dinamik API'ler için Next.js tarafından gereken yapılandırma
+export const fetchCache = 'force-no-store';
+
+// Bu dosya için statik parametre oluşturma fonksiyonu
+export async function generateStaticParams() {
+  // Vercel derleme aşamasında dinamik API rota parametreleri gerekli değil
+  console.log('Aktiviteler API route için boş statik parametreler döndürülüyor');
+  return [];
+}
+
 // GET - Tüm aktiviteleri getir
 export async function GET(request: NextRequest) {
   try {

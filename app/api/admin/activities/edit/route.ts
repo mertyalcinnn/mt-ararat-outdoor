@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { findOne, updateOne, deleteOne } from '@/lib/mongodb';
 import { syncActivityToJson, deleteActivityJson } from '@/lib/activities';
 
+// Vercel derleme hatalarını önlemek için dinamik API yapılandırması
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+// Vercel derleme aşaması için gerekli statik parametre fonksiyonu
+export async function generateStaticParams() {
+  // API rotaları için boş parametre listesi döndür
+  return [];
+}
+
 export async function PUT(
   request: NextRequest
 ) {

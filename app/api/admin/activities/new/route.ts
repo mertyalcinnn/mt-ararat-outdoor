@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { findOne, updateOne } from '@/lib/mongodb';
 import { syncActivityToJson } from '@/lib/activities';
 
+// Vercel derleme hatalarını önlemek için dinamik API yapılandırması
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+// Vercel derleme aşaması için gerekli statik parametre fonksiyonu
+export async function generateStaticParams() {
+  // API rotaları için boş parametre listesi döndür
+  return [];
+}
+
 // Slug oluşturma fonksiyonu
 function createSlug(title: string): string {
   const slug = title

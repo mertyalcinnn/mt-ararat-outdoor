@@ -30,10 +30,10 @@ export async function generateStaticParams() {
     
     // JSON dosyalarını bul
     const files = fs.readdirSync(activityDir);
-    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    const jsonFiles = files.filter((file: string) => file.endsWith('.json'));
     
     // Slug parametrelerini oluştur
-    const params = jsonFiles.map(file => ({
+    const params = jsonFiles.map((file: string) => ({
       slug: file.replace('.json', '')
     }));
     
