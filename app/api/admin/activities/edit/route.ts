@@ -76,7 +76,7 @@ export async function PUT(
       // JSON dosyasını güncelle
       let fileResult = false;
       try {
-        const jsonActivity = syncActivityToJson(activityToUpdate);
+        const jsonActivity = await syncActivityToJson(activityToUpdate);
         fileResult = !!jsonActivity;
         console.log(`Aktivite JSON dosyası güncellendi: ${slug}`);
       } catch (fileError) {
@@ -131,7 +131,7 @@ export async function PUT(
       // JSON dosyasını sil
       let jsonDeleteResult = false;
       try {
-        jsonDeleteResult = deleteActivityJson(originalSlug);
+        jsonDeleteResult = await deleteActivityJson(originalSlug);
         console.log(`Eski JSON dosyası silindi: ${originalSlug}`);
       } catch (fileError) {
         console.error(`Eski JSON dosyası silinirken hata:`, fileError);
@@ -149,7 +149,7 @@ export async function PUT(
       // JSON dosyasını kaydet
       let fileResult = false;
       try {
-        const jsonActivity = syncActivityToJson(newActivity);
+        const jsonActivity = await syncActivityToJson(newActivity);
         fileResult = !!jsonActivity;
         console.log(`Yeni aktivite JSON dosyası oluşturuldu: ${newSlug}`);
       } catch (fileError) {
