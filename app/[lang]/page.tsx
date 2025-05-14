@@ -26,7 +26,17 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
 
   try {
     // Veri yükleme işlemlerini try-catch içine alalım
-    const homeData = await getHomepageData();
+    let homeData = {};
+    try {
+      homeData = await getHomepageData() || {
+        heroImage: "/images/hero-fallback.jpg", // varsayılan bir resim yolu
+      };
+    } catch (homeError) {
+      console.error('Ana sayfa verileri yüklenemedi:', homeError);
+      homeData = {
+        heroImage: "/images/hero-fallback.jpg", // varsayılan bir resim yolu
+      };
+    }
     
     // Aktiviteleri almayı deneyelim
     let activities = [];
@@ -39,7 +49,13 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     }
     
     // Diğer verileri alalım
-    const testimonials = await getTestimonials() as Testimonial[];
+    let testimonials = [];
+    try {
+      testimonials = await getTestimonials() as Testimonial[] || [];
+    } catch (testimonialsError) {
+      console.error('Müşteri yorumları yüklenemedi:', testimonialsError);
+      // testimonials boş dizi olarak kalacak
+    }
     const dictionary = getDictionary(lang);
     const { homepage } = dictionary;
     

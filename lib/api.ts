@@ -47,6 +47,8 @@ export async function getAllActivities() {
       console.log(`MongoDB'den ${mongoActivities.length} aktivite alındı.`);
     } catch (mongoErr) {
       console.error('MongoDB veri alımında hata:', mongoErr);
+      // Hata durumunda boş dizi kullan
+      mongoActivities = [];
     }
     
     // Dosya sisteminden veri al
@@ -56,25 +58,30 @@ export async function getAllActivities() {
       console.log(`Dosya sisteminden ${fileActivities.length} aktivite alındı.`);
     } catch (fileErr) {
       console.error('Dosya sistemi veri alımında hata:', fileErr);
+      // Hata durumunda boş dizi kullan
+      fileActivities = [];
     }
     
-    // İki kaynaktan da veri alınamadıysa boş dizi döndür
-    if (!mongoActivities.length && !fileActivities.length) {
-      console.warn('Hiçbir kaynaktan veri alınamadı!');
-      return [];
-    }
-    
-    // MongoDB verileri önceliklidir, ancak her ikisini de birleştir
-    if (mongoActivities.length) {
+    // Üç farklı durum için farklı davranış
+    // 1. Her iki kaynaktan da veri alabildiysek, MongoDB verileri öncelikli
+    if (mongoActivities.length > 0) {
       console.log('MongoDB verileri kullanılıyor...');
       return mongoActivities;
-    } else {
+    } 
+    // 2. Sadece dosya sisteminden veri alabildiysek
+    else if (fileActivities.length > 0) {
       console.log('Dosya sistemi verileri kullanılıyor...');
       return fileActivities;
+    }
+    // 3. Hiçbir yerden veri alamadıysak - varsayılan boş veri döndür
+    else {
+      console.warn('Hiçbir kaynaktan veri alınamadı! Varsayılan boş aktivite listesi döndürülüyor.');
+      return [];
     }
     
   } catch (error) {
     console.error('Aktiviteleri alırken genel hata:', error);
+    // Genel hata durumunda boş dizi döndür
     return [];
   }
 }

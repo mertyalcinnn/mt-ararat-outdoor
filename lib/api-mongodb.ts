@@ -3,15 +3,16 @@
 import { MongoClient, Db, Collection, Document, WithId } from 'mongodb';
 
 // MongoDB bağlantı bilgileri
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || 'mt-ararat-outdoor';
 
 // Bağlantı nesnesini önbelleğe alın (geliştirme ortamında sık hot-reload'lar için)
 let cachedClient: MongoClient | null = null;
 let cachedDb: Db | null = null;
 
+// MONGODB_URI olmasa bile hatayı göğüsle ve devam et
 if (!MONGODB_URI) {
-  throw new Error('MongoDB URI tanımlanmamış. Lütfen .env.local dosyasını kontrol edin.');
+  console.warn('MongoDB URI tanımlanmamış. Lütfen .env.local dosyasını kontrol edin.');
 }
 
 // MongoDB'ye bağlanma

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { find } from '@/lib/mongodb';
 import { getAllActivities } from '@/lib/activities';
 
+// API route'un dynamic olduğunu belirt
+export const dynamic = 'force-dynamic';
+
 // GET - Tüm aktiviteleri getir
 export async function GET(request: NextRequest) {
   try {
