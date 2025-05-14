@@ -1,9 +1,9 @@
-import { getDictionary } from "@/dictionaries";
-import { Locale } from "@/lib/i18n";
-import Hero from "@/components/Hero";
-import EnhancedActivityList from "@/components/EnhancedActivityList";
-import InstagramPromoBanner from "@/components/InstagramPromoBanner";
-import { getHomepageData, getAllActivities, getTestimonials } from "@/lib/api";
+import { getDictionary } from "../../dictionaries";
+import { Locale } from "../../lib/i18n";
+import Hero from "../../components/Hero";
+import EnhancedActivityList from "../../components/EnhancedActivityList";
+import InstagramPromoBanner from "../../components/InstagramPromoBanner";
+import { getHomepageData, getAllActivities, getTestimonials } from "../../lib/api";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,7 +23,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
   const lang = params?.lang || "tr";
 
   const homeData = getHomepageData();
-  const activities = getAllActivities();
+  const activities = await getAllActivities();
   const testimonials = getTestimonials() as Testimonial[];
   const dictionary = getDictionary(lang);
   const { homepage } = dictionary;

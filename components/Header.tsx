@@ -43,7 +43,7 @@ export default function Header({ lang }: { lang: Locale }) {
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-white/95 shadow-md backdrop-blur-sm py-2"
+          ? "bg-white shadow-md backdrop-blur-sm py-2 bg-opacity-95"
           : "bg-transparent py-4"
       }`}
     >
@@ -72,7 +72,7 @@ export default function Header({ lang }: { lang: Locale }) {
               </span>
               <span
                 className={`text-xs font-medium tracking-wider ${
-                  scrolled ? "text-secondary" : "text-white/80"
+                  scrolled ? "text-secondary" : "text-white opacity-80"
                 }`}
               >
                 {siteConfig.slogan}
@@ -86,8 +86,8 @@ export default function Header({ lang }: { lang: Locale }) {
               href={`/${lang}`}
               className={`px-4 py-2 rounded-md transition-colors ${
                 scrolled
-                  ? "text-dark hover:text-primary hover:bg-primary/5"
-                  : "text-white hover:text-white/80 hover:bg-white/10"
+                  ? "text-dark hover:text-primary hover:bg-primary hover:bg-opacity-5"
+                  : "text-white hover:text-white hover:text-opacity-80 hover:bg-white hover:bg-opacity-10"
               }`}
             >
               {navigation.home}
@@ -96,8 +96,8 @@ export default function Header({ lang }: { lang: Locale }) {
               href={`/${lang}/activities`}
               className={`px-4 py-2 rounded-md transition-colors ${
                 scrolled
-                  ? "text-dark hover:text-primary hover:bg-primary/5"
-                  : "text-white hover:text-white/80 hover:bg-white/10"
+                  ? "text-dark hover:text-primary hover:bg-primary hover:bg-opacity-5"
+                  : "text-white hover:text-white hover:text-opacity-80 hover:bg-white hover:bg-opacity-10"
               }`}
             >
               {navigation.activities}
@@ -106,8 +106,8 @@ export default function Header({ lang }: { lang: Locale }) {
               href={`/${lang}/about`}
               className={`px-4 py-2 rounded-md transition-colors ${
                 scrolled
-                  ? "text-dark hover:text-primary hover:bg-primary/5"
-                  : "text-white hover:text-white/80 hover:bg-white/10"
+                  ? "text-dark hover:text-primary hover:bg-primary hover:bg-opacity-5"
+                  : "text-white hover:text-white hover:text-opacity-80 hover:bg-white hover:bg-opacity-10"
               }`}
             >
               {navigation.about}
@@ -116,8 +116,8 @@ export default function Header({ lang }: { lang: Locale }) {
               href={`/${lang}/contact`}
               className={`px-4 py-2 rounded-md transition-colors ${
                 scrolled
-                  ? "text-dark hover:text-primary hover:bg-primary/5"
-                  : "text-white hover:text-white/80 hover:bg-white/10"
+                  ? "text-dark hover:text-primary hover:bg-primary hover:bg-opacity-5"
+                  : "text-white hover:text-white hover:text-opacity-80 hover:bg-white hover:bg-opacity-10"
               }`}
             >
               {navigation.contact}
@@ -129,8 +129,8 @@ export default function Header({ lang }: { lang: Locale }) {
                 onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-md ${
                   scrolled
-                    ? "text-dark hover:text-primary hover:bg-primary/5"
-                    : "text-white hover:text-white/80 hover:bg-white/10"
+                    ? "text-dark hover:text-primary hover:bg-primary hover:bg-opacity-5"
+                    : "text-white hover:text-white hover:text-opacity-80 hover:bg-white hover:bg-opacity-10"
                 }`}
               >
                 <span>{lang.toUpperCase()}</span>
@@ -156,7 +156,7 @@ export default function Header({ lang }: { lang: Locale }) {
                     <Link
                       key={locale}
                       href={`/${locale}${getPathWithoutLang()}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:bg-opacity-5 hover:text-primary"
                       onClick={() => setLanguageMenuOpen(false)}
                     >
                       {localeNames[locale]}
@@ -170,8 +170,8 @@ export default function Header({ lang }: { lang: Locale }) {
               href={`/${lang}/contact`}
               className={`ml-2 px-5 py-2 rounded-md ${
                 scrolled
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border border-white/30"
+                  ? "bg-primary text-white hover:bg-primary hover:opacity-90"
+                  : "bg-white text-white hover:bg-white hover:bg-opacity-30 backdrop-blur-sm border border-white border-opacity-30 bg-opacity-20"
               }`}
             >
               {navigation.reservation}
@@ -197,7 +197,7 @@ export default function Header({ lang }: { lang: Locale }) {
                     <Link
                       key={locale}
                       href={`/${locale}${getPathWithoutLang()}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:bg-opacity-5 hover:text-primary"
                       onClick={() => {
                         setLanguageMenuOpen(false);
                         setMobileMenuOpen(false);
@@ -246,28 +246,28 @@ export default function Header({ lang }: { lang: Locale }) {
             <nav className="py-2">
               <Link
                 href={`/${lang}`}
-                className="block px-4 py-3 text-dark hover:bg-primary/5 hover:text-primary"
+                className="block px-4 py-3 text-dark hover:bg-primary hover:bg-opacity-5 hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {navigation.home}
               </Link>
               <Link
                 href={`/${lang}/activities`}
-                className="block px-4 py-3 text-dark hover:bg-primary/5 hover:text-primary"
+                className="block px-4 py-3 text-dark hover:bg-primary hover:bg-opacity-5 hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {navigation.activities}
               </Link>
               <Link
                 href={`/${lang}/about`}
-                className="block px-4 py-3 text-dark hover:bg-primary/5 hover:text-primary"
+                className="block px-4 py-3 text-dark hover:bg-primary hover:bg-opacity-5 hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {navigation.about}
               </Link>
               <Link
                 href={`/${lang}/contact`}
-                className="block px-4 py-3 text-dark hover:bg-primary/5 hover:text-primary"
+                className="block px-4 py-3 text-dark hover:bg-primary hover:bg-opacity-5 hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {navigation.contact}
@@ -275,7 +275,7 @@ export default function Header({ lang }: { lang: Locale }) {
               <div className="px-4 py-3">
                 <Link
                   href={`/${lang}/contact`}
-                  className="block w-full py-2 text-center bg-primary text-white rounded-md hover:bg-primary/90"
+                  className="block w-full py-2 text-center bg-primary text-white rounded-md hover:bg-primary hover:opacity-90"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {navigation.reservation}

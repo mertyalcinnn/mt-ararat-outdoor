@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
     const uniqueFilename = `${generateUniqueId()}${fileExtension}`;
     
     // Görsel türünü kontrol edelim (sadece jpeg, jpg, png, webp, gif)
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
     if (!allowedExtensions.includes(fileExtension)) {
       return NextResponse.json(
-        { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp ve gif desteklenmektedir.' },
+        { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp, gif ve svg desteklenmektedir.' },
         { status: 400 }
       );
     }
@@ -49,22 +49,42 @@ export async function POST(request: NextRequest) {
     try {
       await fs.promises.access(uploadDir);
     } catch (error) {
-      console.log('Uploads directory does not exist, creating...', uploadDir);
-      await mkdir(uploadDir, { recursive: true });
+      console.log('Uploads dizini bulunamadı, oluşturuluyor...', uploadDir);
+      try {
+        await mkdir(uploadDir, { recursive: true });
+        console.log('Uploads dizini başarıyla oluşturuldu');
+      } catch (mkdirError) {
+        console.error('Uploads dizini oluşturulurken hata:', mkdirError);
+        return NextResponse.json(
+          { error: `Uploads dizini oluşturulamadı: ${mkdirError instanceof Error ? mkdirError.message : 'Bilinmeyen hata'}` },
+          { status: 500 }
+        );
+      }
     }
     
     const filePath = path.join(uploadDir, uniqueFilename);
     
     // Debug bilgisi
-    console.log('Saving file to:', filePath);
+    console.log('Görsel kaydediliyor:', filePath);
     
     try {
       await writeFile(filePath, buffer);
-      console.log('File saved successfully');
+      console.log('Görsel başarıyla kaydedildi');
     } catch (fileError) {
-      console.error('Error writing file:', fileError);
+      console.error('Görsel yazma hatası:', fileError);
       return NextResponse.json(
         { error: `Dosya kaydedilemedi: ${fileError instanceof Error ? fileError.message : 'Bilinmeyen hata'}` },
+        { status: 500 }
+      );
+    }
+    
+    // Dosyanın var olduğundan emin olalım
+    try {
+      await fs.promises.access(filePath);
+    } catch (accessError) {
+      console.error('Kaydedilen dosya bulunamadı:', accessError);
+      return NextResponse.json(
+        { error: 'Dosya kaydedildi fakat erişilemedi. Lütfen tekrar deneyin.' },
         { status: 500 }
       );
     }

@@ -1,8 +1,8 @@
-import ActivityList from '@/components/ActivityList';
-import PageHeader from '@/components/PageHeader';
-import { getAllActivities } from '@/lib/api';
-import { Locale } from '@/lib/i18n';
-import { getDictionary } from '@/dictionaries';
+import ActivityList from '../../../components/ActivityList';
+import PageHeader from '../../../components/PageHeader';
+import { getAllActivities } from '../../../lib/api';
+import { Locale } from '../../../lib/i18n';
+import { getDictionary } from '../../../dictionaries';
 
 // Sayfa yenileme için revalidate değeri (saniye cinsinden) - 0 = Her istekte yeniden oluştur
 export const revalidate = 0;

@@ -5,7 +5,9 @@ let uri = '';
 try {
   uri = process.env.MONGODB_URI || '';
   if (!uri) {
-    console.warn('MONGODB_URI çevresel değişkeni ayarlanmadı, MongoDB özellikleri devre dışı kalacak');
+    console.warn('MONGODB_URI çevresel değişkeni ayarlanmadı, veritabanı işlemleri dosya sistem üzerinden yapılacak');
+  } else {
+    console.log('MongoDB URI bulundu, bağlantı kurulacak');
   }
 } catch (error) {
   console.error('MONGODB_URI erişiminde hata:', error);
@@ -136,15 +138,34 @@ export async function find(collectionName: string, query: any = {}) {
 // Helper function to update one document
 export async function updateOne(collectionName: string, query: any, update: any, upsert = true) {
   try {
-    if (!uri) {
-      console.warn('MongoDB URI tanımlanmamış, updateOne çalıştırılamadı');
-      throw new Error('MongoDB URI tanımlanmamış');
+    if (!uri || uri.trim() === '') {
+      console.warn(`MongoDB URI tanımlanmamış, ${collectionName} updateOne çalıştırılamadı`);
+      // Silently return a faux-successful response rather than error
+      return {
+        acknowledged: true,
+        modifiedCount: 0,
+        upsertedId: null,
+        upsertedCount: 0,
+        matchedCount: 0,
+        source: 'filesystem-fallback',
+        noMongo: true
+      };
     }
     
+    console.log(`MongoDB ${collectionName} koleksiyonunda updateOne çalışıyor...`);
+    console.log('Query:', JSON.stringify(query));
+    
     const collection = await getCollection(collectionName);
-    return collection.updateOne(query, { $set: update }, { upsert });
+    const result = await collection.updateOne(query, { $set: update }, { upsert });
+    console.log(`MongoDB updateOne sonuç: ${JSON.stringify(result)}`);
+    return result;
   } catch (error) {
     console.error(`MongoDB updateOne hatası (${collectionName}):`, error);
+    if (error instanceof Error) {
+      console.error('Hata tipi:', error.name);
+      console.error('Hata mesajı:', error.message);
+      console.error('Hata yığını:', error.stack);
+    }
     throw error;
   }
 }

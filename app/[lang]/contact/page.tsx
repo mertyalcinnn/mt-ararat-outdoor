@@ -1,10 +1,10 @@
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
-import PageHeader from '@/components/PageHeader';
-import ContactForm from '@/components/ContactForm';
-import { getContactData } from '@/lib/api';
-import { Locale } from '@/lib/i18n';
-import { getDictionary } from '@/dictionaries';
+import PageHeader from '../../../components/PageHeader';
+import ContactForm from '../../../components/ContactForm';
+import { getContactData } from '../../../lib/api';
+import { Locale } from '../../../lib/i18n';
+import { getDictionary } from '../../../dictionaries';
 
 export default function ContactPage({ params }: { params: { lang: Locale } }) {
   const contactData = getContactData();

@@ -2,10 +2,10 @@ import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
 import Link from 'next/link';
-import ActivityGallery from '@/components/ActivityGallery';
-import { getActivityBySlug, getAllActivities } from '@/lib/api';
-import { Locale } from '@/lib/i18n';
-import { getDictionary } from '@/dictionaries';
+import ActivityGallery from '../../../../components/ActivityGallery';
+import { getActivityBySlug, getAllActivities } from '../../../../lib/api';
+import { Locale } from '../../../../lib/i18n';
+import { getDictionary } from '../../../../dictionaries';
 
 // Sayfa yenileme için revalidate değeri (saniye cinsinden) - 0 = Her istekte yeniden oluştur
 export const revalidate = 0;

@@ -84,18 +84,18 @@ export default function EnhancedActivityList({ activities, lang }: ActivityListP
                 height={400}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-dark/40 to-transparent opacity-60 group-hover:opacity-50 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark to-transparent opacity-60 group-hover:opacity-50 transition-opacity"></div>
               
               {/* Zorluk seviyesi ve süre göstergeleri - resim üzerinde */}
               <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-10">
-                <div className="flex items-center bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+                <div className="flex items-center bg-white text-white px-3 py-1 rounded-full text-sm opacity-20 backdrop-blur-sm">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                   <span>{activity.duration}</span>
                 </div>
                 
-                <div className="flex items-center bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+                <div className="flex items-center bg-white text-white px-3 py-1 rounded-full text-sm opacity-20 backdrop-blur-sm">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                   </svg>
@@ -117,11 +117,11 @@ export default function EnhancedActivityList({ activities, lang }: ActivityListP
             
             <div className="p-6 relative z-10 bg-white">
               <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{activity.title}</h3>
-              <p className="text-dark/70 mb-6 line-clamp-2">{activity.description}</p>
+              <p className="text-dark opacity-70 mb-6 line-clamp-2">{activity.description}</p>
               
               <Link 
                 href={`/${lang}/activities/${activity.slug}`} 
-                className="inline-flex items-center justify-center w-full py-3 bg-light rounded-lg border-2 border-primary/20 text-primary font-medium hover:border-primary hover:bg-primary/5 transition-all duration-300"
+                className="inline-flex items-center justify-center w-full py-3 bg-light rounded-lg border-2 border-primary text-primary font-medium hover:border-primary hover:bg-primary hover:bg-opacity-5 transition-all duration-300"
               >
                 <span>{viewDetails[lang]}</span>
                 <svg className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

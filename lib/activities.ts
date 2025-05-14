@@ -108,8 +108,13 @@ export function syncActivityToJson(activity: any) {
   try {
     // Dizinin var olduğundan emin ol
     if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-      console.log('JSON aktiviteleri dizini oluşturuldu:', dataDir);
+      try {
+        fs.mkdirSync(dataDir, { recursive: true });
+        console.log('JSON aktiviteleri dizini oluşturuldu:', dataDir);
+      } catch (dirError) {
+        console.error('Aktivite dizini oluşturulamadı:', dirError);
+        return null;
+      }
     }
     
     // Slug kontrolü
@@ -118,15 +123,31 @@ export function syncActivityToJson(activity: any) {
       return null;
     }
     
-    // JSON dosyasını oluştur
-    const filePath = path.join(dataDir, `${activity.slug}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(activity, null, 2), 'utf8');
-    
-    console.log(`Aktivite '${activity.slug}' başarıyla JSON dosyasına yazıldı: ${filePath}`);
-    return activity;
+    // JS nesnesini JSON'a dönüştürmeyi dene (hatalar için)
+    try {
+      const jsonStr = JSON.stringify(activity, null, 2);
+      if (!jsonStr) {
+        throw new Error('JSON dönüştürme başarısız oldu');
+      }
+      
+      // JSON dosyasını oluştur
+      const filePath = path.join(dataDir, `${activity.slug}.json`);
+      fs.writeFileSync(filePath, jsonStr, 'utf8');
+      
+      // Dosyanın var olduğunu kontrol et
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Dosya yazıldı ama oluşturulmadı: ${filePath}`);
+      }
+      
+      console.log(`Aktivite '${activity.slug}' başarıyla JSON dosyasına yazıldı: ${filePath}`);
+      return activity;
+    } catch (jsonError) {
+      console.error('JSON dönüştürme veya yazma hatası:', jsonError);
+      throw jsonError;
+    }
   } catch (error) {
-    console.error('Aktivite JSON dosyasına yazılırken hata:', error);
-    return null;
+    console.error('Aktivite JSON dosyasına yazılırken genel hata:', error);
+    throw error;
   }
 }
 

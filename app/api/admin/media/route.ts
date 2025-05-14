@@ -29,34 +29,48 @@ export async function GET() {
     // Tüm dizinlerdeki medya dosyalarını topla
     for (const dir of UPLOAD_DIRS) {
       // Dizinin var olduğundan emin ol
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        continue;
+      try {
+        if (!fs.existsSync(dir)) {
+          console.log(`Dizin bulunamadı, oluşturuluyor: ${dir}`);
+          fs.mkdirSync(dir, { recursive: true });
+          console.log(`Dizin oluşturuldu: ${dir}`);
+          continue;
+        }
+        
+        const files = fs.readdirSync(dir);
+        const relativeDirPath = dir.replace(path.join(process.cwd(), 'public'), '');
+        
+        const mediaFiles = files
+          .filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return SUPPORTED_FORMATS.includes(ext);
+          })
+          .map(file => {
+            try {
+              const filePath = path.join(dir, file);
+              const stats = fs.statSync(filePath);
+              const relativePath = path.join(relativeDirPath, file).replace(/\\/g, '/');
+              
+              return {
+                name: file,
+                url: relativePath,  // Frontende görüntülemek için url dönüşümü
+                path: relativePath,
+                size: formatFileSize(stats.size),
+                sizeBytes: stats.size,
+                lastModified: stats.mtime.toISOString(),
+                type: path.extname(file).substring(1)
+              };
+            } catch (fileError) {
+              console.error(`Dosya işlenirken hata: ${file}`, fileError);
+              return null;
+            }
+          })
+          .filter(item => item !== null); // Null olanları filtrele
+        
+        allMedia = [...allMedia, ...mediaFiles];
+      } catch (dirError) {
+        console.error(`Dizin okunurken hata: ${dir}`, dirError);
       }
-      
-      const files = fs.readdirSync(dir);
-      const relativeDirPath = dir.replace(path.join(process.cwd(), 'public'), '');
-      
-      const mediaFiles = files
-        .filter(file => {
-          const ext = path.extname(file).toLowerCase();
-          return SUPPORTED_FORMATS.includes(ext);
-        })
-        .map(file => {
-          const filePath = path.join(dir, file);
-          const stats = fs.statSync(filePath);
-          const relativePath = path.join(relativeDirPath, file).replace(/\\/g, '/');
-          
-          return {
-            name: file,
-            path: relativePath,
-            size: formatFileSize(stats.size),
-            lastModified: stats.mtime.toISOString(),
-            type: path.extname(file).substring(1)
-          };
-        });
-      
-      allMedia = [...allMedia, ...mediaFiles];
     }
     
     // Son değiştirilme tarihine göre sırala (en yeni önce)
@@ -68,7 +82,8 @@ export async function GET() {
   } catch (error) {
     console.error('Medya dosyaları listelenirken hata:', error);
     return NextResponse.json({ 
-      error: 'Medya dosyaları listelenirken hata oluştu' 
+      error: 'Medya dosyaları listelenirken hata oluştu',
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }

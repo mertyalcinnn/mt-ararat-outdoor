@@ -1,0 +1,19 @@
+{
+  "title": "dsfdsf",
+  "slug": "sdffsd",
+  "description": "fdfsffsd",
+  "content": "# Aktivite Hakkında\n\nAktivitenin detaylı açıklaması buraya girilecek. Bu alan Markdown formatını destekler.\n\n## Detaylar\n\n- Madde 1\n- Madde 2\n- Madde 3\n\n## Rota\n\n1. Başlangıç noktası\n2. Ara nokta\n3. Bitiş noktası",
+  "coverImage": "",
+  "gallery": [],
+  "duration": "1",
+  "difficultyLevel": "Orta",
+  "includedServices": [
+    "Profesyonel rehberlik",
+    "Ekipman",
+    "Ulaşım"
+  ],
+  "contactWhatsapp": "",
+  "featured": true,
+  "createdAt": "2025-05-13T17:43:13.892Z",
+  "updatedAt": "2025-05-13T17:43:13.892Z"
+}

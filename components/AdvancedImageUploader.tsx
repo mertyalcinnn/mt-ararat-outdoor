@@ -349,6 +349,7 @@ export default function AdvancedImageUploader({
                         onError={(e) => {
                           console.error(`Failed to load gallery image: ${image.url}`);
                           e.currentTarget.src = '/images/placeholder-image.svg';
+                          setError(`Bir görsel yüklenemedi: ${image.name}. Başka bir görsel seçin.`);
                         }}
                       />
                     </div>

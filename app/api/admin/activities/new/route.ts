@@ -51,12 +51,28 @@ export async function POST(request: NextRequest) {
     console.log('Yeni aktivite oluşturma isteği alındı.');
     const activityData = await request.json();
     
-    // Slug oluştur veya gelen değeri kullan
-    const slug = activityData.slug ? 
-      await generateUniqueSlug(activityData.slug) : 
-      await generateUniqueSlug(activityData.title);
+    if (!activityData.title) {
+      return NextResponse.json(
+        { error: 'Aktivite başlığı gereklidir' },
+        { status: 400 }
+      );
+    }
     
-    console.log(`Oluşturulan slug: ${slug}`);
+    // Slug oluştur veya gelen değeri kullan
+    let slug;
+    try {
+      slug = activityData.slug ? 
+        await generateUniqueSlug(activityData.slug) : 
+        await generateUniqueSlug(activityData.title);
+      
+      console.log(`Oluşturulan slug: ${slug}`);
+    } catch (slugError) {
+      console.error('Slug oluşturma hatası:', slugError);
+      return NextResponse.json(
+        { error: 'Slug oluşturulamadı', details: slugError instanceof Error ? slugError.message : String(slugError) },
+        { status: 500 }
+      );
+    }
     
     const newActivity = {
       ...activityData,
@@ -72,22 +88,42 @@ export async function POST(request: NextRequest) {
     };
     
     // Veritabanına kaydet
-    console.log('Aktivite MongoDB\'ye kaydediliyor...');
-    await updateOne('activities', { slug }, newActivity);
-    console.log('Aktivite MongoDB\'ye kaydedildi.');
+    let dbResult;
+    try {
+      console.log('Aktivite MongoDB\'ye kaydediliyor...');
+      dbResult = await updateOne('activities', { slug }, newActivity);
+      console.log('Aktivite MongoDB\'ye kaydedildi:', dbResult);
+    } catch (dbError) {
+      console.error('MongoDB kayıt hatası:', dbError);
+      
+      // MongoDB veritabanına yazamadıysak yine de dosya sistemine yazmayı deneyebiliriz
+      // Yalnızca JSON kaydetme işlemine devam et
+    }
     
     // Ayrıca dosya sistemine kaydet (JSON olarak)
+    let fileResult = false;
     try {
       console.log('Aktivite JSON dosyasına kaydediliyor...');
-      syncActivityToJson(newActivity);
+      const jsonActivity = syncActivityToJson(newActivity);
+      fileResult = !!jsonActivity;
       console.log(`Aktivite JSON dosyasına da kaydedildi: ${slug}`);
     } catch (fileError) {
-      console.error(`Aktivite MongoDB'ye kaydedildi ancak JSON dosyasına yazılamadı:`, fileError);
+      console.error(`Aktivite JSON dosyasına yazılamadı:`, fileError);
+    }
+    
+    // Her iki kayıt da başarısızsa hata döndür
+    if (!dbResult && !fileResult) {
+      return NextResponse.json(
+        { error: 'Aktivite kaydedilemedi. Hem veritabanı hem de dosya sistemi kaydı başarısız oldu.' },
+        { status: 500 }
+      );
     }
     
     return NextResponse.json({ 
       success: true,
-      activity: newActivity
+      activity: newActivity,
+      savedToMongo: !!dbResult,
+      savedToFile: fileResult
     });
     
   } catch (error) {

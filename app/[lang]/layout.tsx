@@ -1,19 +1,15 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { locales, Locale } from "@/lib/i18n";
-import { siteConfig } from "@/config/site";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import { Locale } from "../../lib/i18n";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// Export ortak root layout metadata ile paylaşılıyor
-
 export function generateStaticParams() {
-  return locales.map((locale) => ({ lang: locale }));
+  return [{ lang: 'tr' }, { lang: 'en' }, { lang: 'ru' }];
 }
 
-export default async function RootLayout({
+export default async function LangLayout({
   children,
   params,
 }: {

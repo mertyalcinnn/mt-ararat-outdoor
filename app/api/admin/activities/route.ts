@@ -15,17 +15,11 @@ export async function GET(request: NextRequest) {
       console.log('MongoDB\'den aktivite bulunamadı, dosya sisteminden okunuyor...');
       const fileActivities = getAllActivities();
       
-      return NextResponse.json({
-        source: 'file',
-        activities: fileActivities
-      });
+      return NextResponse.json(fileActivities);
     }
     
     // MongoDB'den gelen aktiviteleri döndür
-    return NextResponse.json({
-      source: 'mongodb',
-      activities
-    });
+    return NextResponse.json(activities);
     
   } catch (error) {
     console.error('Aktiviteler alınırken hata:', error);
@@ -35,11 +29,7 @@ export async function GET(request: NextRequest) {
       console.log('Hata nedeniyle dosya sisteminden aktiviteler okunuyor...');
       const fileActivities = getAllActivities();
       
-      return NextResponse.json({
-        error: 'MongoDB hatası, dosya sisteminden okundu',
-        source: 'file',
-        activities: fileActivities
-      });
+      return NextResponse.json(fileActivities);
     } catch (fileError) {
       console.error('Dosya sisteminden okuma hatası:', fileError);
       

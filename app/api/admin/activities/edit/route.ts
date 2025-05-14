@@ -9,15 +9,47 @@ export async function PUT(
     const updatedData = await request.json();
     const slug = updatedData.originalSlug || updatedData.slug;
     
-    // Aktivitenin var olup olmadığını kontrol et
-    const existingActivity = await findOne('activities', { slug });
-    
-    if (!existingActivity) {
-      console.error(`Güncellenecek aktivite bulunamadı: ${slug}`);
+    if (!slug) {
+      console.error('Güncellenecek aktivite için slug bilgisi eksik');
       return NextResponse.json(
-        { error: `${slug} aktivitesi bulunamadı` },
-        { status: 404 }
+        { error: 'Slug bilgisi eksik' },
+        { status: 400 }
       );
+    }
+    
+    // Aktivitenin var olup olmadığını kontrol et
+    let existingActivity = null;
+    try {
+      existingActivity = await findOne('activities', { slug });
+    } catch (dbError) {
+      console.error(`Aktivite sorgulanırken MongoDB hatası:`, dbError);
+    }
+    
+    // Mongo'da bulunamadıysa JSON dosyasından kontrol edelim
+    if (!existingActivity) {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const filePath = path.join(process.cwd(), 'data', 'activities', `${slug}.json`);
+        
+        if (fs.existsSync(filePath)) {
+          console.log(`MongoDB'de bulunamayan aktivite JSON dosyasından okunuyor: ${slug}`);
+          const fileContents = fs.readFileSync(filePath, 'utf8');
+          existingActivity = JSON.parse(fileContents);
+        } else {
+          console.error(`Güncellenecek aktivite bulunamadı: ${slug}`);
+          return NextResponse.json(
+            { error: `${slug} aktivitesi bulunamadı` },
+            { status: 404 }
+          );
+        }
+      } catch (fileError) {
+        console.error(`Dosya sisteminden aktivite okuma hatası:`, fileError);
+        return NextResponse.json(
+          { error: `${slug} aktivitesi bulunamadı` },
+          { status: 404 }
+        );
+      }
     }
     
     // Slug değişmiyorsa, doğrudan güncelle
@@ -32,19 +64,38 @@ export async function PUT(
       }
       
       // MongoDB'de güncelle
-      await updateOne('activities', { slug }, activityToUpdate);
+      let dbResult = null;
+      try {
+        dbResult = await updateOne('activities', { slug }, activityToUpdate);
+        console.log(`Aktivite MongoDB'de güncellendi: ${slug}`);
+      } catch (dbError) {
+        console.error(`Aktivite MongoDB'de güncellenirken hata:`, dbError);
+        // Hata oluşursa dosya sisteminde güncellemeye devam et
+      }
       
       // JSON dosyasını güncelle
+      let fileResult = false;
       try {
-        syncActivityToJson(activityToUpdate);
+        const jsonActivity = syncActivityToJson(activityToUpdate);
+        fileResult = !!jsonActivity;
         console.log(`Aktivite JSON dosyası güncellendi: ${slug}`);
       } catch (fileError) {
-        console.error(`Aktivite MongoDB'de güncellendi ancak JSON dosyası güncellenemedi:`, fileError);
+        console.error(`Aktivite JSON dosyası güncellenirken hata:`, fileError);
+      }
+      
+      // Her iki kaynak da başarısız olduysa hata döndür
+      if (!dbResult && !fileResult) {
+        return NextResponse.json(
+          { error: 'Aktivite güncellenemedi. Hem veritabanı hem de dosya sistemi güncellemesi başarısız oldu.' },
+          { status: 500 }
+        );
       }
       
       return NextResponse.json({
         success: true,
-        activity: activityToUpdate
+        activity: activityToUpdate,
+        savedToMongo: !!dbResult,
+        savedToFile: fileResult
       });
     } 
     // Slug değişiyorsa, eskisini sil ve yenisini ekle
@@ -52,40 +103,72 @@ export async function PUT(
       const newSlug = updatedData.slug;
       const originalSlug = updatedData.originalSlug;
       
-      if (updatedData.originalSlug) {
-        delete updatedData.originalSlug; // Gereksiz alanı temizle
+      if (!newSlug) {
+        return NextResponse.json(
+          { error: 'Yeni slug değeri belirtilmemiş' },
+          { status: 400 }
+        );
       }
       
-      // Eski aktiviteyi sil
-      await deleteOne('activities', { slug: originalSlug });
-      
-      // JSON dosyasını sil
-      try {
-        deleteActivityJson(originalSlug);
-      } catch (fileError) {
-        console.error(`Eski JSON dosyası silinemedi:`, fileError);
-      }
-      
-      // Yeni aktiviteyi ekle
       const newActivity = {
         ...updatedData,
         updatedAt: new Date()
       };
       
-      // MongoDB'ye kaydet
-      await updateOne('activities', { slug: newSlug }, newActivity);
+      if (newActivity.originalSlug) {
+        delete newActivity.originalSlug; // Gereksiz alanı temizle
+      }
+      
+      // Eski aktiviteyi sil
+      let deleteResult = null;
+      try {
+        deleteResult = await deleteOne('activities', { slug: originalSlug });
+        console.log(`Eski aktivite MongoDB'den silindi: ${originalSlug}`);
+      } catch (dbError) {
+        console.error(`Eski aktivite MongoDB'den silinirken hata:`, dbError);
+      }
+      
+      // JSON dosyasını sil
+      let jsonDeleteResult = false;
+      try {
+        jsonDeleteResult = deleteActivityJson(originalSlug);
+        console.log(`Eski JSON dosyası silindi: ${originalSlug}`);
+      } catch (fileError) {
+        console.error(`Eski JSON dosyası silinirken hata:`, fileError);
+      }
+      
+      // Yeni aktiviteyi ekle
+      let dbResult = null;
+      try {
+        dbResult = await updateOne('activities', { slug: newSlug }, newActivity);
+        console.log(`Yeni aktivite MongoDB'ye eklendi: ${newSlug}`);
+      } catch (dbError) {
+        console.error(`Yeni aktivite MongoDB'ye eklenirken hata:`, dbError);
+      }
       
       // JSON dosyasını kaydet
+      let fileResult = false;
       try {
-        syncActivityToJson(newActivity);
+        const jsonActivity = syncActivityToJson(newActivity);
+        fileResult = !!jsonActivity;
         console.log(`Yeni aktivite JSON dosyası oluşturuldu: ${newSlug}`);
       } catch (fileError) {
-        console.error(`Yeni JSON dosyası oluşturulamadı:`, fileError);
+        console.error(`Yeni JSON dosyası oluşturulurken hata:`, fileError);
+      }
+      
+      // Her iki kaynak da başarısız olduysa hata döndür
+      if (!dbResult && !fileResult) {
+        return NextResponse.json(
+          { error: 'Aktivite güncellenemedi. Hem veritabanı hem de dosya sistemi güncellemesi başarısız oldu.' },
+          { status: 500 }
+        );
       }
       
       return NextResponse.json({
         success: true,
-        activity: newActivity
+        activity: newActivity,
+        savedToMongo: !!dbResult,
+        savedToFile: fileResult
       });
     }
   } catch (error) {

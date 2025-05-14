@@ -121,3 +121,45 @@ export async function getActivityBySlugFromDB(slug: string) {
     return null;
   }
 }
+
+// MongoDB'den hakkımızda verilerini getir
+export async function getAboutData() {
+  try {
+    console.log('MongoDB\'den hakkımızda verileri alınıyor...');
+    const aboutData = await findOne('about', {});
+    if (aboutData) {
+      console.log('MongoDB\'den hakkımızda verileri alındı.');
+      return aboutData;
+    } else {
+      console.warn('MongoDB\'de hakkımızda verisi bulunamadı, JSON dosyasına geri dönülüyor.');
+      // JSON dosyasından veri alma işlemi
+      const fs = require('fs');
+      const path = require('path');
+      const aboutJsonPath = path.join(process.cwd(), 'about.json');
+      
+      if (fs.existsSync(aboutJsonPath)) {
+        return JSON.parse(fs.readFileSync(aboutJsonPath, 'utf8'));
+      } else {
+        console.error('about.json dosyası bulunamadı!');
+        return null;
+      }
+    }
+  } catch (error) {
+    console.error('MongoDB\'den hakkımızda verileri alınamadı:', error);
+    // Hata durumunda fallback olarak JSON dosyasından veri almayı dene
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const aboutJsonPath = path.join(process.cwd(), 'about.json');
+      
+      if (fs.existsSync(aboutJsonPath)) {
+        console.log('Hata sonrası JSON dosyasından hakkımızda verileri alınıyor...');
+        return JSON.parse(fs.readFileSync(aboutJsonPath, 'utf8'));
+      }
+    } catch (jsonError) {
+      console.error('JSON dosyasından hakkımızda verileri alınamadı:', jsonError);
+    }
+    
+    return null;
+  }
+}

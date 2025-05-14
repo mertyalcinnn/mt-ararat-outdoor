@@ -1,0 +1,24 @@
+{
+  "title": "Hakkımızda",
+  "content": "# Mt.Ararat Outdoor Adventures Hakkında\ns\nMt.Ararat Outdoor Adventures, Türkiye'nin en yüksek dağı olan Ağrı Dağı ve çevresinde profesyonel outdoor aktiviteleri sunan bir ekiptir. 2010 yılından bu yana, binlerce maceraperestin unutulmaz deneyimler yaşamasına yardımcı olduk.\n\nMisyonumuz, insanlara doğanın muhteşem güzelliklerini güvenli ve sürdürülebilir bir şekilde keşfetmelerini sağlamak ve bölgenin doğal zenginliklerini korumaktır.\n\n## Değerlerimiz\n\n- **Güvenlik**: Tüm aktivitelerimizde güvenlik birinci önceliğimizdir.\n- **Sürdürülebilirlik**: Doğaya saygılı, minimum iz bırakan bir anlayışla çalışırız.\n- **Profesyonellik**: Tüm rehberlerimiz alanlarında uzman ve sertifikalıdır.\n- **Tutku**: Doğa sporlarına ve bölgemize olan tutkumuz, sunduğumuz hizmetin kalitesine yansır.",
+  "teamMembers": [
+    {
+      "name": "Ahmet Yılmaz",
+      "role": "Kurucu & Baş Rehber",
+      "bio": "20 yılı aşkın dağcılık ve kayak deneyimine sahip olan Ahmet, dünya çapında birçok zirveye tırmanmıştır. UIAGM/IFMGA sertifikalı dağ rehberidir.",
+      "image": "/images/team-ahmet.jpg"
+    },
+    {
+      "name": "Elif Kaya",
+      "role": "Kış Sporları Uzmanı",
+      "bio": "Profesyonel kayakçı ve eğitmen olan Elif, kayak turu rehberliğinde uzmanlaşmıştır. Avrupa ve Kuzey Amerika'da birçok kayak turuna liderlik etmiştir.",
+      "image": "/images/team-elif.jpg"
+    },
+    {
+      "name": "Mehmet Demir",
+      "role": "Deniz Sporları Rehberi",
+      "bio": "Su sporları konusunda 15 yıllık deneyime sahip olan Mehmet, deniz kaynağı ve SUP turlarımızın liderliğini yapmaktadır.",
+      "image": "/images/team-mehmet.jpg"
+    }
+  ]
+}
