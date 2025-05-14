@@ -6,8 +6,8 @@ import { getContactData } from '../../../lib/api';
 import { Locale } from '../../../lib/i18n';
 import { getDictionary } from '../../../dictionaries';
 
-export default function ContactPage({ params }: { params: { lang: Locale } }) {
-  const contactData = getContactData();
+export default async function ContactPage({ params }: { params: { lang: Locale } }) {
+  const contactData = await getContactData();
   const dictionary = getDictionary(params.lang);
   const { navigation } = dictionary;
   

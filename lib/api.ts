@@ -1,3 +1,5 @@
+'use server';
+
 import fs from 'fs';
 import { join } from 'path';
 import { getAllActivities as getActivitiesFromFile, getActivityBySlug as getActivityDetailFromFile } from './activities';
@@ -22,7 +24,7 @@ export function getJsonData(filePath: string) {
 }
 
 // Homepage verilerini getir
-export function getHomepageData() {
+export async function getHomepageData() {
   return getJsonData('data/homepage.json');
 }
 
@@ -115,16 +117,16 @@ export async function getActivityBySlug(slug: string) {
 }
 
 // Hakkımızda verilerini getir
-export function getAboutData() {
+export async function getAboutData() {
   return getJsonData('data/about.json');
 }
 
 // İletişim verilerini getir
-export function getContactData() {
+export async function getContactData() {
   return getJsonData('data/contact.json');
 }
 
 // Müşteri yorumlarını getir
-export function getTestimonials() {
+export async function getTestimonials() {
   return getJsonData('data/testimonials.json');
 }

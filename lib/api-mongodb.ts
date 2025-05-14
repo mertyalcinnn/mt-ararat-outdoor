@@ -1,3 +1,5 @@
+'use server';
+
 import { MongoClient, Db, Collection, Document, WithId } from 'mongodb';
 
 // MongoDB bağlantı bilgileri

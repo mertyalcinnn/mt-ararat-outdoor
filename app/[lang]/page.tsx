@@ -26,7 +26,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
 
   try {
     // Veri yükleme işlemlerini try-catch içine alalım
-    const homeData = getHomepageData();
+    const homeData = await getHomepageData();
     
     // Aktiviteleri almayı deneyelim
     let activities = [];
@@ -39,7 +39,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     }
     
     // Diğer verileri alalım
-    const testimonials = getTestimonials() as Testimonial[];
+    const testimonials = await getTestimonials() as Testimonial[];
     const dictionary = getDictionary(lang);
     const { homepage } = dictionary;
     
