@@ -6,7 +6,7 @@ import { getAllActivities as getActivitiesFromFile, getActivityBySlug as getActi
 import { getAllActivitiesFromDB, getActivityBySlugFromDB } from './api-mongodb';
 
 // JSON dosyalarını okuma
-export function getJsonData(filePath: string) {
+export async function getJsonData(filePath: string) {
   const fullPath = join(process.cwd(), filePath);
   if (!fs.existsSync(fullPath)) {
     console.error(`Dosya bulunamadı: ${fullPath}`);
@@ -25,7 +25,7 @@ export function getJsonData(filePath: string) {
 
 // Homepage verilerini getir
 export async function getHomepageData() {
-  return getJsonData('data/homepage.json');
+  return await getJsonData('data/homepage.json');
 }
 
 // Tüm aktiviteleri getir - MongoDB'den alma işlemi ekle
@@ -118,15 +118,15 @@ export async function getActivityBySlug(slug: string) {
 
 // Hakkımızda verilerini getir
 export async function getAboutData() {
-  return getJsonData('data/about.json');
+  return await getJsonData('data/about.json');
 }
 
 // İletişim verilerini getir
 export async function getContactData() {
-  return getJsonData('data/contact.json');
+  return await getJsonData('data/contact.json');
 }
 
 // Müşteri yorumlarını getir
 export async function getTestimonials() {
-  return getJsonData('data/testimonials.json');
+  return await getJsonData('data/testimonials.json');
 }

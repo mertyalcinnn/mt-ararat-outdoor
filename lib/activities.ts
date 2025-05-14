@@ -9,7 +9,7 @@ const contentDir = path.join(process.cwd(), 'content', 'activities');
 const dataDir = path.join(process.cwd(), 'data', 'activities');
 
 // Kök 'activities' dizinindeki aktiviteleri oku
-export function getRootActivities() {
+export async function getRootActivities() {
   try {
     const activitiesDir = path.join(process.cwd(), 'activities');
     if (!fs.existsSync(activitiesDir)) {
@@ -53,7 +53,7 @@ export function getRootActivities() {
 }
 
 // Markdown aktiviteleri oku
-export function getAllMarkdownActivities() {
+export async function getAllMarkdownActivities() {
   try {
     // Dizinin var olduğundan emin ol
     if (!fs.existsSync(contentDir)) {
@@ -103,7 +103,7 @@ export function getAllMarkdownActivities() {
 }
 
 // JSON aktivitelerini oku
-export function getAllJsonActivities() {
+export async function getAllJsonActivities() {
   try {
     // Dizinin var olduğundan emin ol
     if (!fs.existsSync(dataDir)) {
@@ -165,7 +165,7 @@ export function getAllJsonActivities() {
 }
 
 // Aktiviteyi JSON'a dönüştür ve kaydet
-export function syncActivityToJson(activity: any) {
+export async function syncActivityToJson(activity: any) {
   try {
     // Dizinin var olduğundan emin ol
     if (!fs.existsSync(dataDir)) {
@@ -213,7 +213,7 @@ export function syncActivityToJson(activity: any) {
 }
 
 // Aktivite JSON dosyasını sil
-export function deleteActivityJson(slug: string) {
+export async function deleteActivityJson(slug: string) {
   try {
     if (!slug) {
       console.error('Silinecek aktivitenin slug değeri belirtilmemiş!');
@@ -236,7 +236,7 @@ export function deleteActivityJson(slug: string) {
 }
 
 // Tüm markdown aktiviteleri JSON'a senkronize et
-export function syncAllActivities() {
+export async function syncAllActivities() {
   try {
     console.log('syncAllActivities: Tüm aktiviteler senkronize ediliyor...');
     const markdownActivities = getAllMarkdownActivities();
@@ -264,7 +264,7 @@ export function syncAllActivities() {
 }
 
 // Tüm aktiviteleri getir
-export function getAllActivities() {
+export async function getAllActivities() {
   try {
     console.log('activities.ts: getAllActivities fonksiyonu çağrılıyor...');
     
@@ -304,7 +304,7 @@ export function getAllActivities() {
 }
 
 // Slug'a göre aktivite getir
-export function getActivityBySlug(slug: string) {
+export async function getActivityBySlug(slug: string) {
   try {
     console.log(`activities.ts: getActivityBySlug("${slug}") fonksiyonu çağrılıyor...`);
     
