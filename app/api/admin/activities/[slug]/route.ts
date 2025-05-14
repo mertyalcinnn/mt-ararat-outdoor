@@ -183,7 +183,7 @@ export async function PUT(
     if (finalSlug !== slug) {
       try {
         console.log(`Eski JSON dosyası siliniyor: ${slug}`);
-        deleteActivityJson(slug);
+        await deleteActivityJson(slug);
       } catch (deleteError) {
         console.error(`Eski JSON dosyası silinirken hata:`, deleteError);
       }
@@ -192,7 +192,7 @@ export async function PUT(
     // JSON dosyasına kaydet
     let fileResult = false;
     try {
-      const jsonActivity = syncActivityToJson(updatedActivity);
+      const jsonActivity = await syncActivityToJson(updatedActivity);
       fileResult = !!jsonActivity;
       console.log(`Aktivite JSON dosyasına da güncellendi: ${finalSlug}`);
     } catch (fileError) {
@@ -261,7 +261,7 @@ export async function DELETE(
     // JSON dosyasını da sil
     let fileResult = false;
     try {
-      fileResult = deleteActivityJson(slug);
+      fileResult = await deleteActivityJson(slug);
       console.log(`JSON dosyası silme sonucu: ${fileResult ? 'Başarılı' : 'Başarısız'}`);
     } catch (fileError) {
       console.error('JSON dosyası silinirken hata:', fileError);

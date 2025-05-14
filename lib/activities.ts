@@ -235,11 +235,11 @@ export async function deleteActivityJson(slug: string) {
   }
 }
 
-// Tüm markdown aktiviteleri JSON'a senkronize et
+    // Tüm markdown aktiviteleri JSON'a senkronize et
 export async function syncAllActivities() {
   try {
     console.log('syncAllActivities: Tüm aktiviteler senkronize ediliyor...');
-    const markdownActivities = getAllMarkdownActivities();
+    const markdownActivities = await getAllMarkdownActivities();
     
     if (markdownActivities.length === 0) {
       console.log('Senkronize edilecek markdown aktivite bulunamadı.');
@@ -247,11 +247,11 @@ export async function syncAllActivities() {
       console.log(`${markdownActivities.length} markdown aktivite JSON'a senkronize ediliyor...`);
       
       let successCount = 0;
-      markdownActivities.forEach(activity => {
-        if (syncActivityToJson(activity)) {
+      for (const activity of markdownActivities) {
+        if (await syncActivityToJson(activity)) {
           successCount++;
         }
-      });
+      }
       
       console.log(`${successCount}/${markdownActivities.length} aktivite başarıyla senkronize edildi.`);
     }
@@ -271,7 +271,7 @@ export async function getAllActivities() {
     // Önce kök activities dizininden okumayı dene
     try {
       console.log('Kök activities dizininden JSON aktiviteler okunuyor...');
-      const rootActivities = getRootActivities();
+      const rootActivities = await getRootActivities();
       if (rootActivities && rootActivities.length > 0) {
         console.log(`Kök dizinden ${rootActivities.length} aktivite başarıyla okundu.`);
         return rootActivities;
@@ -283,7 +283,7 @@ export async function getAllActivities() {
     // Sonra data/activities dizininden oku
     try {
       console.log('data/activities dizininden JSON aktiviteler okunuyor...');
-      const activities = getAllJsonActivities();
+      const activities = await getAllJsonActivities();
       
       // Dizi kontrolü
       if (!Array.isArray(activities)) {
@@ -314,7 +314,7 @@ export async function getActivityBySlug(slug: string) {
     }
     
     // JSON dosyalarından oku
-    const activities = getAllJsonActivities();
+    const activities = await getAllJsonActivities();
     const activity = activities.find(activity => activity.slug === slug);
     
     if (activity) {
