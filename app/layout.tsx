@@ -6,8 +6,8 @@ import Footer from "../components/Footer";
 import { locales, Locale } from "../lib/i18n";
 import { siteConfig } from "../config/site";
 
-// Ana layout'u dynamic olarak işaretle
-export const dynamic = 'force-dynamic';
+// ÜST DÜZEY DYNAMIC EXPORT KALDIRILDI - KRİTİK API ROTALARINA TAŞINDI
+// export const dynamic = 'force-dynamic';
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -128,6 +128,13 @@ export async function deleteOne(
 export async function getAllActivitiesFromDB() {
   try {
     console.log('MongoDB\'den tüm aktiviteler alınıyor...');
+    
+    // GEÇİCİ ÇÖZÜM: MongoDB'yi atlayıp direkt boş dizi döndür
+    // Sebebi: MongoDB ile ilgili olası sorunları bypass etmek
+    console.warn('MongoDB atlanıyor. 500 hatası tespit için boş dizi döndürülüyor');
+    return [];
+    
+    /* MongoDB kodunu devre dışı bırakıyoruz
     const { db } = await connectToDatabase();
     
     // db nesnesi null ise, bağlantı başarısız olmuş demektir
@@ -153,6 +160,7 @@ export async function getAllActivitiesFromDB() {
       const { _id, ...rest } = activity;
       return rest;
     });
+    */
   } catch (error) {
     console.error('MongoDB\'den aktiviteler alınamadı:', error);
     return [];

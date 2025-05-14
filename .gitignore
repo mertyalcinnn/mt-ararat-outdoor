@@ -1,4 +1,9 @@
 node_modules/
 .next/
+.next.bak/
 .contentlayer/
 public/images/Ollama*
+.env
+.env.local
+.vercel
+backups/

@@ -287,20 +287,62 @@ export async function getAllActivities() {
       
       // Dizi kontrolü
       if (!Array.isArray(activities)) {
-        console.error('getAllJsonActivities bir dizi döndürmedi:', activities);
-        return [];
+        console.error('getAllJsonActivities bir dizi döndrmedi:', activities);
+        // Varsayılan veri döndür
+        return getFallbackActivities();
       }
       
       console.log(`data/activities dizininden ${activities.length} aktivite okundu`);
-      return activities;
+      return activities.length > 0 ? activities : getFallbackActivities();
     } catch (readError) {
       console.error('JSON aktiviteleri okuma hatası:', readError);
-      return [];
+      // Varsayılan veri döndür
+      return getFallbackActivities();
     }
   } catch (error) {
     console.error('getAllActivities fonksiyonunda genel hata:', error);
-    return [];
+    // Son çare olarak varsayılan veri döndür
+    return getFallbackActivities();
   }
+}
+
+// Bir hata durumunda göstermek için varsayılan aktiviteler
+function getFallbackActivities() {
+  console.log('FALLBACK: Varsayılan aktivite verileri kullanılıyor!');
+  return [
+    {
+      id: 'hiking-example',
+      title: 'Yürüyüş Turları',
+      slug: 'hiking-tours',
+      description: 'Dağlarda ve doğada yürüyüş turları ile doğanın güzelliklerini keşfedin.',
+      coverImage: '/images/hiking.jpg',
+      featured: true,
+      difficultyLevel: 'Orta',
+      duration: '3-5 saat',
+      content: 'Bu aktivite hakkında daha fazla bilgi bulunmamaktadır.',
+      includedServices: ['Rehberlik', 'Ara Öğün', 'Ekipman'],
+      gallery: [
+        '/images/placeholder-image.jpg',
+        '/images/placeholder-image.jpg',
+      ]
+    },
+    {
+      id: 'climbing-example',
+      title: 'Kaya Tırmanışı',
+      slug: 'rock-climbing',
+      description: 'Kaya tırmanışı ile adrenalin dolu bir deneyim yaşayın.',
+      coverImage: '/images/placeholder-image.jpg',
+      featured: true,
+      difficultyLevel: 'Zor',
+      duration: '4-6 saat',
+      content: 'Bu aktivite hakkında daha fazla bilgi bulunmamaktadır.',
+      includedServices: ['Rehberlik', 'Güvenlik Ekipmanı', 'Eğitim'],
+      gallery: [
+        '/images/placeholder-image.jpg',
+        '/images/placeholder-image.jpg',
+      ]
+    },
+  ];
 }
 
 // Slug'a göre aktivite getir
@@ -323,9 +365,10 @@ export async function getActivityBySlug(slug: string) {
       console.log(`${slug} aktivitesi JSON dosyaları arasında bulunamadı.`);
     }
     
-    return activity;
+    return activity || (getFallbackActivities().find(act => act.slug === slug) || null);
   } catch (error) {
     console.error(`${slug} aktivitesini alırken hata:`, error);
-    return null;
+    // Fallback aktivitelerde arama
+    return getFallbackActivities().find(act => act.slug === slug) || null;
   }
 }
