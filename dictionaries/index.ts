@@ -1,3 +1,5 @@
+'use server';
+
 import { Locale, locales } from '@/lib/i18n';
 
 interface Dictionary {
