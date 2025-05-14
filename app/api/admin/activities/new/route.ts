@@ -46,6 +46,22 @@ async function generateUniqueSlug(title: string): Promise<string> {
 }
 
 // POST - Yeni aktivite oluştur
+// Revalidate fonksiyonu - önbelleği temizler
+async function revalidatePages() {
+  console.log('Sayfalar yeniden oluşturuluyor...');
+  try {
+    // Next.js API route içinden doğrudan revalidatePath kullanamayız
+    // Bu nedenle revalidate API'sini çağırıyoruz
+    const revalidateResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/revalidate`);
+    const result = await revalidateResponse.json();
+    console.log('Revalidate sonucu:', result);
+    return result;
+  } catch (error) {
+    console.error('Revalidate hatası:', error);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Yeni aktivite oluşturma isteği alındı.');
@@ -119,11 +135,15 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Önbelleği temizleme işlemini gerçekleştir
+    const revalidateResult = await revalidatePages();
+
     return NextResponse.json({ 
       success: true,
       activity: newActivity,
       savedToMongo: !!dbResult,
-      savedToFile: fileResult
+      savedToFile: fileResult,
+      revalidated: !!revalidateResult
     });
     
   } catch (error) {

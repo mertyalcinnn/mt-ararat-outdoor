@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { findOne, updateOne, deleteOne } from '@/lib/mongodb';
 import { syncActivityToJson, deleteActivityJson } from '@/lib/activities';
 
+// Revalidate fonksiyonu - önbelleği temizler
+async function revalidatePages() {
+  console.log('Sayfalar yeniden oluşturuluyor...');
+  try {
+    // Next.js API route içinden doğrudan revalidatePath kullanamayız
+    // Bu nedenle revalidate API'sini çağırıyoruz
+    const revalidateResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/revalidate`);
+    const result = await revalidateResponse.json();
+    console.log('Revalidate sonucu:', result);
+    return result;
+  } catch (error) {
+    console.error('Revalidate hatası:', error);
+    return null;
+  }
+}
+
 // GET - Slug'a göre aktivite getir
 export async function GET(
   request: NextRequest,
@@ -152,11 +168,15 @@ export async function PUT(
       );
     }
     
+    // Önbelleği temizleme işlemini gerçekleştir
+    const revalidateResult = await revalidatePages();
+    
     return NextResponse.json({ 
       success: true,
       activity: updatedActivity,
       savedToMongo: dbResult,
-      savedToFile: fileResult
+      savedToFile: fileResult,
+      revalidated: !!revalidateResult
     });
     
   } catch (error) {
@@ -227,11 +247,15 @@ export async function DELETE(
       }
     }
     
+    // Önbelleği temizleme işlemini gerçekleştir
+    const revalidateResult = await revalidatePages();
+    
     return NextResponse.json({ 
       success: true,
       message: `${slug} aktivitesi başarıyla silindi.`,
       deletedFromMongo: dbResult,
-      deletedFromFile: fileResult
+      deletedFromFile: fileResult,
+      revalidated: !!revalidateResult
     });
     
   } catch (error) {

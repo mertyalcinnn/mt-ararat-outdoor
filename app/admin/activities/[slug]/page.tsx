@@ -60,7 +60,14 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
       });
       
       if (response.ok) {
-        alert('Aktivite başarıyla güncellendi!');
+        const result = await response.json();
+        
+        if (result.revalidated) {
+          alert('Aktivite başarıyla güncellendi ve site önbelleği temizlendi!');
+        } else {
+          alert('Aktivite başarıyla güncellendi, ancak site önbelleği temizlenemedi. Değişiklikler birkaç dakika içinde sitede görünecektir.');
+        }
+        
         router.push('/admin/dashboard/activities');
       } else {
         const errorData = await response.json();
