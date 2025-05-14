@@ -23,7 +23,14 @@ export async function GET(request: NextRequest) {
     
     // MongoDB'den veri al
     try {
-      activitiesFromMongo = await getAllActivitiesFromDB();
+      const mongoData = await getAllActivitiesFromDB();
+      // MongoDB verilerinin Activity türüne uygunluğunu kontrol ediyoruz
+      activitiesFromMongo = mongoData.map(item => ({
+        slug: item.slug || '',
+        title: item.title || '',
+        description: item.description || '',
+        ...item // Diğer tüm özellikleri de ekle
+      }));
       console.log(`MongoDB'den gelen aktivite sayısı: ${activitiesFromMongo.length}`);
     } catch (mongoError) {
       console.error('MongoDB veri alma hatası:', mongoError);
