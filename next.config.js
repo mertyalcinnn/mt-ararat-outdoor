@@ -4,9 +4,9 @@ const nextConfig = {
   images: {
     domains: ['via.placeholder.com'],
   },
-  output: 'standalone',
+  // output: 'standalone', // Vercel için bu ayarı kaldırıyoruz
   experimental: {
-    isrMemoryCacheSize: 0,
+    // isrMemoryCacheSize: 0, // ISR bellek önbelleği sorunlarına neden olabilir
     serverComponentsExternalPackages: []
   },
   // PostCSS'i manuel yapılandırma
@@ -14,3 +14,5 @@ const nextConfig = {
     return config;
   }
 }
+
+module.exports = nextConfig;
