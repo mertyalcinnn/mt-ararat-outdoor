@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+// Medya dosyası türü
+interface MediaFile {
+  name: string;
+  url: string;
+  path: string;
+  size: string;
+  sizeBytes: number;
+  lastModified: string;
+  type: string;
+}
+
 // Resim yükleme dizinleri
 const UPLOAD_DIRS = [
   path.join(process.cwd(), 'public', 'uploads'),
@@ -24,7 +35,7 @@ function formatFileSize(bytes: number): string {
 // GET - Mevcut medya dosyalarını listele
 export async function GET() {
   try {
-    let allMedia = [];
+    let allMedia: MediaFile[] = [];
     
     // Tüm dizinlerdeki medya dosyalarını topla
     for (const dir of UPLOAD_DIRS) {
@@ -40,7 +51,7 @@ export async function GET() {
         const files = fs.readdirSync(dir);
         const relativeDirPath = dir.replace(path.join(process.cwd(), 'public'), '');
         
-        const mediaFiles = files
+        const mediaFiles: MediaFile[] = files
           .filter(file => {
             const ext = path.extname(file).toLowerCase();
             return SUPPORTED_FORMATS.includes(ext);
@@ -59,13 +70,13 @@ export async function GET() {
                 sizeBytes: stats.size,
                 lastModified: stats.mtime.toISOString(),
                 type: path.extname(file).substring(1)
-              };
+              } as MediaFile;
             } catch (fileError) {
               console.error(`Dosya işlenirken hata: ${file}`, fileError);
               return null;
             }
           })
-          .filter(item => item !== null); // Null olanları filtrele
+          .filter((item): item is MediaFile => item !== null); // Null olanları filtrele
         
         allMedia = [...allMedia, ...mediaFiles];
       } catch (dirError) {
