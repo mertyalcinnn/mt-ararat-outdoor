@@ -1,0 +1,12 @@
+{
+  "/not-found": "app/not-found.js",
+  "/api/admin/activities/route": "app/api/admin/activities/route.js",
+  "/api/admin/activities/[slug]/route": "app/api/admin/activities/[slug]/route.js",
+  "/api/admin/upload/route": "app/api/admin/upload/route.js",
+  "/api/admin/activities/new/route": "app/api/admin/activities/new/route.js",
+  "/[lang]/page": "app/[lang]/page.js",
+  "/[lang]/activities/[slug]/page": "app/[lang]/activities/[slug]/page.js",
+  "/admin/dashboard/activities/page": "app/admin/dashboard/activities/page.js",
+  "/admin/dashboard/activities/new/page": "app/admin/dashboard/activities/new/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js"
+}

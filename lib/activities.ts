@@ -165,7 +165,7 @@ export async function getAllJsonActivities() {
 }
 
 // Aktiviteyi JSON'a dönüştür ve kaydet
-export async function syncActivityToJson(activity: any) {
+export async function syncActivityToJson(activity: any): Promise<any> {
   try {
     // Dizinin var olduğundan emin ol
     if (!fs.existsSync(dataDir)) {
@@ -213,7 +213,7 @@ export async function syncActivityToJson(activity: any) {
 }
 
 // Aktivite JSON dosyasını sil
-export async function deleteActivityJson(slug: string) {
+export async function deleteActivityJson(slug: string): Promise<boolean> {
   try {
     if (!slug) {
       console.error('Silinecek aktivitenin slug değeri belirtilmemiş!');
