@@ -16,6 +16,18 @@ function generateUniqueId() {
 // Bu API rotası dinamik ve statik olarak oluşturulamaz
 export const dynamic = 'force-dynamic';
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+// OPTIONS handler for CORS
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
@@ -25,7 +37,7 @@ export async function POST(request: NextRequest) {
       console.error('Cloudinary kimlik bilgileri eksik');
       return NextResponse.json(
         { error: 'Cloudinary yapılandırması eksik' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
     
@@ -38,7 +50,7 @@ export async function POST(request: NextRequest) {
       console.error('FormData işlenirken hata:', formError);
       return NextResponse.json(
         { error: 'Dosya verisi işlenemedi', details: formError instanceof Error ? formError.message : 'FormData hatası' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
     
@@ -48,7 +60,7 @@ export async function POST(request: NextRequest) {
       console.error('Dosya bulunamadı');
       return NextResponse.json(
         { error: 'Dosya yüklenemedi - dosya bulunamadı' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -68,7 +80,7 @@ export async function POST(request: NextRequest) {
       console.error('Geçersiz dosya formatı:', file.type);
       return NextResponse.json(
         { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp, gif ve svg desteklenmektedir.' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -107,7 +119,7 @@ export async function POST(request: NextRequest) {
         fullUrl: result.secure_url,
         // @ts-ignore - result tipini any olarak kabul et
         filename: result.public_id
-      });
+      }, { headers: corsHeaders });
       
     } catch (cloudinaryError) {
       console.error('Cloudinary yükleme hatası:', cloudinaryError);
@@ -116,7 +128,7 @@ export async function POST(request: NextRequest) {
           error: 'Görsel Cloudinary\'ye yüklenemedi', 
           details: cloudinaryError instanceof Error ? cloudinaryError.message : String(cloudinaryError)
         },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
   } catch (error) {
@@ -126,7 +138,7 @@ export async function POST(request: NextRequest) {
         error: 'Görsel yüklenemedi', 
         details: error instanceof Error ? error.message : 'Bilinmeyen hata'
       },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
