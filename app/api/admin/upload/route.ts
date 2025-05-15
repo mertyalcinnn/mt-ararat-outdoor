@@ -15,6 +15,7 @@ function generateUniqueId() {
 
 // Bu API rotası dinamik ve statik olarak oluşturulamaz
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // CORS headers
 const corsHeaders = {

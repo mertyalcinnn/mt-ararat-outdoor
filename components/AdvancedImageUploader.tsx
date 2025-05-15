@@ -230,7 +230,7 @@ export default function AdvancedImageUploader({
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include',
+        cache: 'no-store',
       });
 
       // HTTP durum kodunu kontrol et
