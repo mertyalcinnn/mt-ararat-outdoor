@@ -4,6 +4,9 @@ const nextConfig = {
   images: {
     domains: ['res.cloudinary.com'],
   },
+  experimental: {
+    appDir: true,
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
