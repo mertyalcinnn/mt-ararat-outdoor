@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
     
     // multipart form verilerini işleyelim
     const formData = await request.formData();
-    console.log('FormData alındı, içerik anahtarları:', [...formData.keys()]);
+    // Spread operatörü yerine Array.from kullanarak FormData anahtarlarını al
+    console.log('FormData alındı, içerik anahtarları:', Array.from(formData.keys()));
     
     const file = formData.get('file') as File;
 
