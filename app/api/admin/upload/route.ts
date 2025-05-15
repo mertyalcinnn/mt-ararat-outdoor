@@ -13,9 +13,9 @@ function generateUniqueId() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-// Bu API rotası dinamik ve statik olarak oluşturulamaz
-export const dynamic = 'force-dynamic';
+// Vercel için runtime ve dynamic ayarları
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // CORS headers
 const corsHeaders = {
@@ -26,7 +26,7 @@ const corsHeaders = {
 };
 
 // OPTIONS handler for CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: corsHeaders,
@@ -35,14 +35,6 @@ export async function OPTIONS(request: NextRequest) {
 
 // POST handler
 export async function POST(request: NextRequest) {
-  // CORS preflight için
-  if (request.method === 'OPTIONS') {
-    return new NextResponse(null, {
-      status: 204,
-      headers: corsHeaders,
-    });
-  }
-
   try {
     console.log('Dosya yükleme isteği alındı');
     
@@ -124,14 +116,10 @@ export async function POST(request: NextRequest) {
       // Sonucu döndür
       console.log('Görsel Cloudinary\'ye başarıyla yüklendi', result);
       
-      // @ts-ignore - result tipini any olarak kabul et
       return NextResponse.json({
         success: true,
-        // @ts-ignore - result tipini any olarak kabul et
         url: result.secure_url,
-        // @ts-ignore - result tipini any olarak kabul et
         fullUrl: result.secure_url,
-        // @ts-ignore - result tipini any olarak kabul et
         filename: result.public_id
       }, { headers: corsHeaders });
       
