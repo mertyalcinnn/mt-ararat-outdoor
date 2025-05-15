@@ -1,23 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Locale } from '@/lib/i18n';
-import { getDictionary } from '@/dictionaries';
 
 interface HeroProps {
   title: string;
   description: string;
   image: string;
+  ctaExplore: string;
+  ctaContact: string;
 }
 
-export default function Hero({ title, description, image }: HeroProps) {
+export default function Hero({ title, description, image, ctaExplore, ctaContact }: HeroProps) {
   const params = useParams();
   const lang = params.lang as Locale || 'tr';
-  const dictionary = getDictionary(lang);
-  const { homepage } = dictionary;
   
   const scrollToActivities = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,13 +57,13 @@ export default function Hero({ title, description, image }: HeroProps) {
               href={`/${lang}/activities`} 
               className="bg-primary hover:bg-primary/90 text-white font-medium px-8 py-3 rounded-md transition-all shadow-lg hover:shadow-xl hover:translate-y-[-2px]"
             >
-              {homepage.cta.explore}
+              {ctaExplore}
             </Link>
             <Link 
               href={`/${lang}/contact`} 
               className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white font-medium px-8 py-3 rounded-md transition-all shadow-lg hover:shadow-xl hover:translate-y-[-2px]"
             >
-              {homepage.cta.contact}
+              {ctaContact}
             </Link>
           </div>
         </div>

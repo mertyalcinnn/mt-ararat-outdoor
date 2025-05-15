@@ -1,8 +1,11 @@
+// Using server component since we're fetching data
+// Remove "use client" directive
+
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import PageHeader from '../../../components/PageHeader';
 import TeamMember from '../../../components/TeamMember';
-import { getAboutData } from '../../../lib/api-mongodb'; // MongoDB API'yi kullan
+import { getAboutData } from '../../../lib/api'; // Changed to use api.ts instead of api-mongodb.ts
 import { Locale } from '../../../lib/i18n';
 import { getDictionary } from '../../../dictionaries';
 

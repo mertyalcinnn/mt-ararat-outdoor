@@ -38,7 +38,15 @@ export default function DashboardPage() {
         setIsLoading(true);
         setError(null);
         
-        const response = await fetch('/api/admin/activities');
+        console.log('Aktivite verilerini almak için API isteği yapılıyor...');
+        const response = await fetch('/api/admin/activities', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          },
+          cache: 'no-store'
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);
@@ -48,9 +56,11 @@ export default function DashboardPage() {
         
         // Validasyon kontrolü
         if (!Array.isArray(data)) {
-          console.error('Aktiviteler dizisi değil:', data);
-          throw new Error('Sunucudan beklenmeyen veri formatı alındı');
-        }
+        console.error('Aktiviteler dizisi değil:', data);
+        setError('Sunucudan beklenmeyen veri formatı alındı');
+          setIsLoading(false);
+            return;
+          }
         
         setActivities(data);
         
@@ -363,7 +373,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Yardım Kartı - Yeni Görünüm */}
-          <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-teal-100">
+          <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-teal-100 mb-10">
             <div className="flex items-start">
               <div className="p-3 rounded-full bg-white text-teal-600 mr-4 shadow-sm">
                 <i className="fas fa-question-circle text-xl"></i>
@@ -381,6 +391,43 @@ export default function DashboardPage() {
                   <a href="mailto:support@mtararat.com" className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-teal-700 bg-white hover:bg-teal-50 border border-teal-200 shadow-sm">
                     <i className="fas fa-envelope mr-1.5"></i> Destek Al
                   </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Site Önbelleğini Temizle */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 shadow-sm border border-blue-100 mb-10">
+            <div className="flex items-start">
+              <div className="p-3 rounded-full bg-white text-blue-600 mr-4 shadow-sm">
+                <i className="fas fa-sync-alt text-xl"></i>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-800 mb-1">Site Önbelleğini Temizle</h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  Admin panelinden yaptığınız değişikliklerin siteye anında yansıması için önbelleği temizleyin.
+                  Bu işlem, yapılan son değişikliklerin ziyaretçiler tarafından görülmesini sağlar.
+                </p>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/revalidate?path=/');
+                        if (response.ok) {
+                          const data = await response.json();
+                          alert('Site önbelleği başarıyla temizlendi! Değişiklikler artık görünür olmalı.');
+                        } else {
+                          alert('Önbellek temizleme hatası: ' + (await response.text()));
+                        }
+                      } catch (error) {
+                        console.error('Revalidation hatası:', error);
+                        alert('Önbellek temizleme hatası. Detaylar için konsolu kontrol edin.');
+                      }
+                    }}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 border border-blue-700 shadow-sm"
+                  >
+                    <i className="fas fa-sync-alt mr-1.5"></i> Önbelleği Temizle
+                  </button>
                 </div>
               </div>
             </div>

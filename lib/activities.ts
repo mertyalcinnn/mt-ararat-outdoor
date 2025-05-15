@@ -1,5 +1,3 @@
-'use server';
-
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -10,6 +8,8 @@ const dataDir = path.join(process.cwd(), 'data', 'activities');
 
 // Kök 'activities' dizinindeki aktiviteleri oku
 export async function getRootActivities() {
+  'use server';
+  
   try {
     const activitiesDir = path.join(process.cwd(), 'activities');
     if (!fs.existsSync(activitiesDir)) {
@@ -54,6 +54,8 @@ export async function getRootActivities() {
 
 // Markdown aktiviteleri oku
 export async function getAllMarkdownActivities() {
+  'use server';
+  
   try {
     // Dizinin var olduğundan emin ol
     if (!fs.existsSync(contentDir)) {
@@ -104,8 +106,13 @@ export async function getAllMarkdownActivities() {
 
 // JSON aktivitelerini oku
 export async function getAllJsonActivities() {
+  'use server';
+  
   try {
+    console.log('getAllJsonActivities: data/activities dizininden aktiviteler okunuyor...');
+    
     // Dizinin var olduğundan emin ol
+    const dataDir = path.join(process.cwd(), 'data', 'activities');
     if (!fs.existsSync(dataDir)) {
       try {
         fs.mkdirSync(dataDir, { recursive: true });
@@ -116,31 +123,16 @@ export async function getAllJsonActivities() {
       }
     }
 
-    // 'activities' dizini var mı kontrol et
-    const activitiesDir = path.join(process.cwd(), 'activities');
-    if (fs.existsSync(activitiesDir)) {
-      console.log(`'activities' dizininden JSON dosyaları da kontrol ediliyor...`);
-      try {
-        const rootFileNames = fs.readdirSync(activitiesDir);
-        const rootJsonFiles = rootFileNames.filter(file => file.endsWith('.json'));
-        if (rootJsonFiles.length > 0) {
-          console.log(`'activities' dizininde ${rootJsonFiles.length} JSON aktivite bulundu.`);
-        }
-      } catch (rootError) {
-        console.error(`'activities' dizini okunamadı:`, rootError);
-      }
-    }
-
     // Dosyaları oku
     const fileNames = fs.readdirSync(dataDir);
     const jsonFiles = fileNames.filter(file => file.endsWith('.json'));
     
     if (jsonFiles.length === 0) {
-      console.log('Hiç JSON aktivite dosyası bulunamadı.');
+      console.log('data/activities dizininde hiç JSON aktivite dosyası bulunamadı.');
       return [];
     }
     
-    console.log(`${jsonFiles.length} JSON aktivite dosyası bulundu.`);
+    console.log(`data/activities dizininde ${jsonFiles.length} JSON aktivite dosyası bulundu.`);
     
     const activities = jsonFiles.map(fileName => {
       try {
@@ -148,6 +140,7 @@ export async function getAllJsonActivities() {
         const fileContents = fs.readFileSync(filePath, 'utf8');
         
         const data = JSON.parse(fileContents);
+        console.log(`Başarıyla yüklendi: ${fileName}`);
         return data;
       } catch (error) {
         console.error(`${fileName} dosyası JSON olarak ayrıştırılamadı:`, error);
@@ -166,8 +159,11 @@ export async function getAllJsonActivities() {
 
 // Aktiviteyi JSON'a dönüştür ve kaydet
 export async function syncActivityToJson(activity: any): Promise<any> {
+  'use server';
+  
   try {
     // Dizinin var olduğundan emin ol
+    const dataDir = path.join(process.cwd(), 'data', 'activities');
     if (!fs.existsSync(dataDir)) {
       try {
         fs.mkdirSync(dataDir, { recursive: true });
@@ -193,6 +189,8 @@ export async function syncActivityToJson(activity: any): Promise<any> {
       
       // JSON dosyasını oluştur
       const filePath = path.join(dataDir, `${activity.slug}.json`);
+      console.log(`${activity.slug}.json dosyası yazılıyor...`);
+      
       fs.writeFileSync(filePath, jsonStr, 'utf8');
       
       // Dosyanın var olduğunu kontrol et
@@ -201,6 +199,18 @@ export async function syncActivityToJson(activity: any): Promise<any> {
       }
       
       console.log(`Aktivite '${activity.slug}' başarıyla JSON dosyasına yazıldı: ${filePath}`);
+      
+      // Aktivite, kök "activities" klasöründe varsa kaldır (eski yerlerdeki aktiviteleri temizle)
+      try {
+        const rootActivitiesPath = path.join(process.cwd(), 'activities', `${activity.slug}.json`);
+        if (fs.existsSync(rootActivitiesPath)) {
+          console.log(`Kök dizindeki eski aktivite dosyası siliniyor: ${rootActivitiesPath}`);
+          fs.unlinkSync(rootActivitiesPath);
+        }
+      } catch (rootDeleteError) {
+        console.error('Kök dizindeki aktivite dosyası silinirken hata:', rootDeleteError);
+      }
+      
       return activity;
     } catch (jsonError) {
       console.error('JSON dönüştürme veya yazma hatası:', jsonError);
@@ -214,6 +224,8 @@ export async function syncActivityToJson(activity: any): Promise<any> {
 
 // Aktivite JSON dosyasını sil
 export async function deleteActivityJson(slug: string): Promise<boolean> {
+  'use server';
+  
   try {
     if (!slug) {
       console.error('Silinecek aktivitenin slug değeri belirtilmemiş!');
@@ -237,6 +249,8 @@ export async function deleteActivityJson(slug: string): Promise<boolean> {
 
     // Tüm markdown aktiviteleri JSON'a senkronize et
 export async function syncAllActivities() {
+  'use server';
+  
   try {
     console.log('syncAllActivities: Tüm aktiviteler senkronize ediliyor...');
     const markdownActivities = await getAllMarkdownActivities();
@@ -265,40 +279,47 @@ export async function syncAllActivities() {
 
 // Tüm aktiviteleri getir
 export async function getAllActivities() {
+  'use server';
+  
   try {
     console.log('activities.ts: getAllActivities fonksiyonu çağrılıyor...');
     
-    // Önce kök activities dizininden okumayı dene
+    // Önbellek devre dışı bırak - her zaman güncel veri al
+    const cacheHeader = { 'Cache-Control': 'no-cache, no-store, must-revalidate' };
+    
+    // ÖNEMLİ: İlk önce data/activities dizini (admin paneli tarafından güncellenen) kontrol edilmeli
+    try {
+      console.log('İlk önce data/activities dizininden JSON aktiviteler okunuyor...');
+      const activities = await getAllJsonActivities();
+      
+      // Dizi kontrolü
+      if (Array.isArray(activities) && activities.length > 0) {
+        console.log(`data/activities dizininden ${activities.length} aktivite okundu - BUNLARI KULLANIYORUZ`);
+        return activities;
+      } else {
+        console.log('data/activities dizininde geçerli aktivite bulunamadı.');
+      }
+    } catch (readError) {
+      console.error('data/activities dizininden JSON aktiviteleri okuma hatası:', readError);
+    }
+    
+    // Sonra kök activities dizininden oku (eski yöntem, sadece yedek olarak)
     try {
       console.log('Kök activities dizininden JSON aktiviteler okunuyor...');
       const rootActivities = await getRootActivities();
-      if (rootActivities && rootActivities.length > 0) {
-        console.log(`Kök dizinden ${rootActivities.length} aktivite başarıyla okundu.`);
+      if (rootActivities && Array.isArray(rootActivities) && rootActivities.length > 0) {
+        console.log(`Kök dizinden ${rootActivities.length} aktivite başarıyla okundu - BUNLARI KULLANIYORUZ`);
         return rootActivities;
+      } else {
+        console.log('Kök dizinde geçerli aktivite bulunamadı.');
       }
     } catch (rootError) {
       console.error('Kök activities dizini okuma hatası:', rootError);
     }
     
-    // Sonra data/activities dizininden oku
-    try {
-      console.log('data/activities dizininden JSON aktiviteler okunuyor...');
-      const activities = await getAllJsonActivities();
-      
-      // Dizi kontrolü
-      if (!Array.isArray(activities)) {
-        console.error('getAllJsonActivities bir dizi döndrmedi:', activities);
-        // Varsayılan veri döndür
-        return getFallbackActivities();
-      }
-      
-      console.log(`data/activities dizininden ${activities.length} aktivite okundu`);
-      return activities.length > 0 ? activities : getFallbackActivities();
-    } catch (readError) {
-      console.error('JSON aktiviteleri okuma hatası:', readError);
-      // Varsayılan veri döndür
-      return getFallbackActivities();
-    }
+    // Hiçbir kaynak çalışmazsa varsayılan verileri kullan
+    console.log('Hiçbir kaynak çalışmadı - varsayılan aktiviteleri kullanıyoruz.');
+    return getFallbackActivities();
   } catch (error) {
     console.error('getAllActivities fonksiyonunda genel hata:', error);
     // Son çare olarak varsayılan veri döndür
@@ -347,6 +368,8 @@ function getFallbackActivities() {
 
 // Slug'a göre aktivite getir
 export async function getActivityBySlug(slug: string) {
+  'use server';
+  
   try {
     console.log(`activities.ts: getActivityBySlug("${slug}") fonksiyonu çağrılıyor...`);
     
@@ -355,17 +378,68 @@ export async function getActivityBySlug(slug: string) {
       return null;
     }
     
-    // JSON dosyalarından oku
-    const activities = await getAllJsonActivities();
+    // Önbellek devre dışı bırak - her zaman güncel veri al
+    const cacheHeader = { 'Cache-Control': 'no-cache, no-store, must-revalidate' };
+    
+    // İlk önce data/activities dizininden oku (admin paneli dosyaları)
+    try {
+      console.log(`İlk önce data/activities dizininde "${slug}" aktivitesi aranıyor...`);
+      const dataDir = path.join(process.cwd(), 'data', 'activities');
+      
+      if (fs.existsSync(dataDir)) {
+        const filePath = path.join(dataDir, `${slug}.json`);
+        
+        if (fs.existsSync(filePath)) {
+          console.log(`"${slug}" aktivitesi data/activities dizininde bulundu`);
+          const fileContent = fs.readFileSync(filePath, 'utf8');
+          const activity = JSON.parse(fileContent);
+          return activity;
+        } else {
+          console.log(`"${slug}" aktivitesi data/activities dizininde bulunamadı`);
+        }
+      } else {
+        console.log('data/activities dizini bulunamadı');
+      }
+    } catch (dataError) {
+      console.error(`data/activities'den aktivite alınırken hata:`, dataError);
+    }
+    
+    // Bulunamadıysa kök activities dizinine bak
+    try {
+      console.log(`Kök activities dizininde "${slug}" aktivitesi aranıyor...`);
+      const rootDir = path.join(process.cwd(), 'activities');
+      
+      if (fs.existsSync(rootDir)) {
+        const filePath = path.join(rootDir, `${slug}.json`);
+        
+        if (fs.existsSync(filePath)) {
+          console.log(`"${slug}" aktivitesi kök activities dizininde bulundu`);
+          const fileContent = fs.readFileSync(filePath, 'utf8');
+          const activity = JSON.parse(fileContent);
+          return activity;
+        } else {
+          console.log(`"${slug}" aktivitesi kök activities dizininde bulunamadı`);
+        }
+      } else {
+        console.log('Kök activities dizini bulunamadı');
+      }
+    } catch (rootError) {
+      console.error(`Kök dizinden aktivite alınırken hata:`, rootError);
+    }
+    
+    // Bulunamadıysa önce tüm aktiviteleri yükle ve ara (hızlı bir arama olacak)
+    console.log(`"${slug}" aktivitesi tek tek dosyalarda bulunamadı, tüm aktiviteler yükleniyor...`);
+    const activities = await getAllActivities();
     const activity = activities.find(activity => activity.slug === slug);
     
     if (activity) {
-      console.log(`${slug} aktivitesi JSON dosyasından başarıyla alındı.`);
-    } else {
-      console.log(`${slug} aktivitesi JSON dosyaları arasında bulunamadı.`);
+      console.log(`"${slug}" aktivitesi tüm aktiviteler içinde bulundu`);
+      return activity;
     }
     
-    return activity || (getFallbackActivities().find(act => act.slug === slug) || null);
+    console.log(`"${slug}" aktivitesi hiçbir kaynakta bulunamadı`);
+    // Fallback aktivitelerde arama yapmayı düşünebiliriz
+    return getFallbackActivities().find(act => act.slug === slug) || null;
   } catch (error) {
     console.error(`${slug} aktivitesini alırken hata:`, error);
     // Fallback aktivitelerde arama

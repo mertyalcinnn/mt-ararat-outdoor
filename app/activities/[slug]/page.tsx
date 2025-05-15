@@ -1,3 +1,9 @@
+// This file is a Server Component by default (no "use client" directive)
+// This file is a Server Component by default (no "use client" directive)
+// This file is a Server Component by default (no "use client" directive)
+// This file is a Server Component by default (no "use client" directive)
+// This file is a Server Component by default (no "use client" directive)
+// This file is a Server Component by default (no "use client" directive)
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import ActivityGalleryClient from '../../../components/ActivityGalleryClient';

@@ -1,3 +1,5 @@
+"use server";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllActivitiesFromDB } from '@/lib/api-mongodb';
 import { getAllActivities } from '@/lib/activities';

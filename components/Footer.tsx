@@ -3,12 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Locale } from "@/lib/i18n";
-import { getDictionary } from "@/dictionaries";
 import { siteConfig } from "@/config/site";
 
-export default function Footer({ lang }: { lang: Locale }) {
-  const dictionary = getDictionary(lang);
-  const { navigation } = dictionary;
+export default function Footer({ lang, navigation }: { lang: Locale, navigation?: any }) {
+  // Fallback for navigation if it's undefined
+  const nav = navigation || {
+    home: "Home",
+    activities: "Activities",
+    about: "About Us",
+    contact: "Contact",
+    reservation: "Reservation"
+  };
 
   return (
     <footer className="bg-dark text-white relative">
@@ -102,7 +107,7 @@ export default function Footer({ lang }: { lang: Locale }) {
 
           <div>
             <h3 className="text-lg font-bold mb-6 text-accent">
-              {navigation.activities}
+              {nav.activities}
             </h3>
             <ul className="space-y-3">
               <li>
@@ -158,7 +163,7 @@ export default function Footer({ lang }: { lang: Locale }) {
                   href={`/${lang}`}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  {navigation.home}
+                  {nav.home}
                 </Link>
               </li>
               <li>
@@ -166,7 +171,7 @@ export default function Footer({ lang }: { lang: Locale }) {
                   href={`/${lang}/activities`}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  {navigation.activities}
+                  {nav.activities}
                 </Link>
               </li>
               <li>
@@ -174,7 +179,7 @@ export default function Footer({ lang }: { lang: Locale }) {
                   href={`/${lang}/about`}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  {navigation.about}
+                  {nav.about}
                 </Link>
               </li>
               <li>
@@ -182,7 +187,7 @@ export default function Footer({ lang }: { lang: Locale }) {
                   href={`/${lang}/contact`}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  {navigation.contact}
+                  {nav.contact}
                 </Link>
               </li>
               <li>
@@ -190,7 +195,7 @@ export default function Footer({ lang }: { lang: Locale }) {
                   href={`/${lang}/contact`}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  {navigation.reservation}
+                  {nav.reservation}
                 </Link>
               </li>
             </ul>
@@ -198,7 +203,7 @@ export default function Footer({ lang }: { lang: Locale }) {
 
           <div>
             <h3 className="text-lg font-bold mb-6 text-accent">
-              {navigation.contact}
+              {nav.contact}
             </h3>
             <ul className="space-y-4">
               <li className="flex items-start">

@@ -285,7 +285,12 @@ const dictionaries = {
 };
 
 export const getDictionary = (locale: Locale = 'tr') => {
-  // Make sure locale is one of the valid locales
-  const safeLocale = locales.includes(locale) ? locale : 'tr';
-  return dictionaries[safeLocale] || dictionaries.tr; // Fallback to Turkish
+  try {
+    // Make sure locale is one of the valid locales
+    const safeLocale = locales.includes(locale) ? locale : 'tr';
+    return dictionaries[safeLocale] || dictionaries.tr; // Fallback to Turkish
+  } catch (error) {
+    console.error('Dictionary error:', error);
+    return dictionaries.tr; // Emergency fallback
+  }
 };

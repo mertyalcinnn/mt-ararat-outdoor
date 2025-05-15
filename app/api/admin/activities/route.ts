@@ -27,9 +27,17 @@ export async function GET(request: NextRequest) {
     const activities = await find('activities');
     
     // MongoDB'den veri gelemediyse dosya sisteminden oku
-    if (!activities || activities.length === 0) {
-      console.log('MongoDB\'den aktivite bulunamadı, dosya sisteminden okunuyor...');
-      const fileActivities = getAllActivities();
+    if (!activities || !Array.isArray(activities) || activities.length === 0) {
+      console.log('MongoDB\'den aktivite bulunamadı veya geçerli bir dizi döndürülmedi, dosya sisteminden okunuyor...');
+      const fileActivities = await getAllActivities();
+      
+      // getAllActivities sonucunu doğrula
+      if (!Array.isArray(fileActivities)) {
+        console.error('Dosya sisteminden alınan aktiviteler bir dizi değil:', fileActivities);
+        return NextResponse.json({
+          error: 'Aktivite verisi doğru formatta değil'
+        }, { status: 500 });
+      }
       
       return NextResponse.json(fileActivities);
     }
@@ -43,7 +51,15 @@ export async function GET(request: NextRequest) {
     // Hata durumunda dosya sisteminden okumayı dene
     try {
       console.log('Hata nedeniyle dosya sisteminden aktiviteler okunuyor...');
-      const fileActivities = getAllActivities();
+      const fileActivities = await getAllActivities();
+      
+      // getAllActivities sonucunu doğrula
+      if (!Array.isArray(fileActivities)) {
+        console.error('Dosya sisteminden alınan aktiviteler bir dizi değil:', fileActivities);
+        return NextResponse.json({
+          error: 'Aktivite verisi doğru formatta değil'
+        }, { status: 500 });
+      }
       
       return NextResponse.json(fileActivities);
     } catch (fileError) {

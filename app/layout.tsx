@@ -1,9 +1,14 @@
+// REMOVED "use client" - this must be a Server Component to export metadata
+
+// REMOVED "use client" - this must be a Server Component to export metadata
+
+// REMOVED "use client" - this must be a Server Component to export metadata
+
+// REMOVED "use client" - this must be a Server Component to export metadata
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { locales, Locale } from "../lib/i18n";
 import { siteConfig } from "../config/site";
 
 // ÜST DÜZEY DYNAMIC EXPORT KALDIRILDI - KRİTİK API ROTALARINA TAŞINDI
@@ -27,11 +32,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  params
 }: {
   children: React.ReactNode;
+  params?: { lang?: string };
 }) {
+  // Dil parametresini al veya varsayılan olarak 'tr' kullan
+  const lang = params?.lang || 'tr';
+  
   return (
-    <html lang="tr">
+    <html lang={lang}>
       <body className={inter.className}>
         {children}
       </body>

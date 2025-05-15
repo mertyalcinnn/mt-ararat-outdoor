@@ -28,13 +28,15 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Base64 görüntü işleme hatası:', error);
-    return NextResponse.json(
-      { 
-        error: 'Görüntü işlenirken bir hata oluştu', 
-        details: error instanceof Error ? error.message : String(error)
-      },
-      { status: 500 }
-    );
+    console.error('Base64 görüntü işleme hatası (detaylı):', error);
+    const errorMessage = error instanceof Error 
+      ? `${error.name}: ${error.message}` 
+      : String(error);
+      
+    return NextResponse.json({
+      error: 'Görüntü işlenirken bir hata oluştu',
+      details: errorMessage,
+      stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
+    }, { status: 500 });
   }
 }

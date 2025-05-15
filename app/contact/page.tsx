@@ -1,3 +1,5 @@
+"use client";
+
 import { redirect } from 'next/navigation';
 
 // Bu sayfa, iletişim dizini (contact/) için bir yönlendirme sağlar

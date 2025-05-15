@@ -5,6 +5,8 @@
  * API rotaları için buna genellikle gerek yoktur, ancak output: 'export' yapılandırmasıyla
  * kullanıldığında Next.js bunu gerektirir.
  */
+"use server";
+
 export async function generateStaticParams() {
   try {
     // Boş bir dizi dönüyoruz, çünkü API rotaları dinamik olarak çalışacak

@@ -1,3 +1,5 @@
+"use server";
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // Self-check API - basit sistem durum kontrolü

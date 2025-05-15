@@ -1,3 +1,11 @@
+// REMOVED "use client" - this must be a Server Component to export metadata
+
+// REMOVED "use client" - this must be a Server Component to export metadata
+
+// REMOVED "use client" - this must be a Server Component to export metadata
+
+// REMOVED "use client" - this must be a Server Component to export metadata 
+
 import { Poppins } from 'next/font/google';
 import Script from 'next/script';
 import { Metadata } from 'next';

@@ -125,12 +125,90 @@ export async function getActivityBySlug(slug: string) {
 
 // Hakkımızda verilerini getir
 export async function getAboutData() {
-  return await getJsonData('data/about.json');
+  'use server';
+  
+  try {
+    console.log('getAboutData: Hakkımızda verileri alınıyor...');
+    
+    // ÖNEMLİ: İlk önce MongoDB'den almayı dene (getAboutData), hata varsa JSON dosyasına geri dön
+    try {
+      const { getAboutData: getAboutDataFromDB } = await import('./api-mongodb');
+      const mongoData = await getAboutDataFromDB();
+      
+      if (mongoData) {
+        console.log('MongoDB\'den hakkımızda verileri başarıyla alındı.');
+        return mongoData;
+      } else {
+        console.log('MongoDB\'den veri alınamadı, JSON dosyasına geçiliyor...');
+      }
+    } catch (mongoError) {
+      console.error('MongoDB hakkımızda verileri alınamadı:', mongoError);
+      console.log('JSON dosyasına geri dönülüyor...');
+    }
+    
+    // JSON dosyasından oku
+    console.log('JSON dosyasından hakkımızda verileri okunuyor...');
+    const jsonData = await getJsonData('data/about.json');
+    
+    if (jsonData) {
+      console.log('JSON dosyasından hakkımızda verileri başarıyla alındı.');
+      return jsonData;
+    }
+    
+    // Varsayılan veri - son çare
+    console.warn('Hiçbir kaynaktan hakkımızda verisi alınamadı! Varsayılan veri döndürülüyor.');
+    return {
+      title: "Hakkımızda",
+      content: "Mt.Ararat Outdoor Adventures, Türkiye'nin en yüksek dağı olan Ağrı Dağı ve çevresinde profesyonel outdoor aktiviteleri sunan bir ekiptir.",
+      teamMembers: []
+    };
+  } catch (error) {
+    console.error('getAboutData genel hata:', error);
+    // Varsayılan veri döndür
+    return {
+      title: "Hakkımızda",
+      content: "Mt.Ararat Outdoor Adventures, Türkiye'nin en yüksek dağı olan Ağrı Dağı ve çevresinde profesyonel outdoor aktiviteleri sunan bir ekiptir.",
+      teamMembers: []
+    };
+  }
 }
 
 // İletişim verilerini getir
 export async function getContactData() {
-  return await getJsonData('data/contact.json');
+  'use server';
+  
+  try {
+    console.log('getContactData: İletişim verileri alınıyor...');
+    
+    // JSON dosyasından oku
+    console.log('JSON dosyasından iletişim verileri okunuyor...');
+    const jsonData = await getJsonData('data/contact.json');
+    
+    if (jsonData) {
+      console.log('JSON dosyasından iletişim verileri başarıyla alındı.');
+      return jsonData;
+    }
+    
+    // Varsayılan veri - son çare
+    console.warn('Hiçbir kaynaktan iletişim verisi alınamadı! Varsayılan veri döndürülüyor.');
+    return {
+      title: "İletişim",
+      address: "Ağrı Dağı Etekleri, Doğubayazıt, Ağrı, Türkiye",
+      email: "info@mtararatoutdoor.com",
+      phone: "+90 555 123 4567",
+      content: "Bize ulaşın"
+    };
+  } catch (error) {
+    console.error('getContactData genel hata:', error);
+    // Varsayılan veri döndür
+    return {
+      title: "İletişim",
+      address: "Ağrı Dağı Etekleri, Doğubayazıt, Ağrı, Türkiye",
+      email: "info@mtararatoutdoor.com",
+      phone: "+90 555 123 4567",
+      content: "Bize ulaşın"
+    };
+  }
 }
 
 // Müşteri yorumlarını getir

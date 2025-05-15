@@ -1,17 +1,44 @@
-// next.skip.config.js
-/**
- * Bu dosya, statik oluşturma sırasında hangi sayfaların atlanacağını belirtir.
- * Admin paneli gibi sayfalar, statik oluşturulduğunda sorun yaratabilir.
- * Bu sayfalar, çalışma zamanında dinamik olarak oluşturulacak.
- */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  images: {
+    domains: ['via.placeholder.com'],
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+  },
+  // Dinamik rendering için
+  swcMinify: true,
+  output: 'standalone',
+  experimental: {
+    // Tamamen dinamik mod
+    serverActions: {
+      bodySizeLimit: '5mb',
+    },
+    serverComponentsExternalPackages: ['react-dom', '@mui/material'],
+  },
+  // Statik önbelleği devre dışı bırak
+  staticPageGenerationTimeout: 90,
+  // Önbellek süresini kısalt
+  onDemandEntries: {
+    maxInactiveAge: 10,
+    pagesBufferLength: 1,
+  },
+  // Her zaman server-side render
+  // Bu özellik statik sayfaları oluşturmayı devre dışı bırakır
+  // ve her sayfa isteğini sunucu tarafında işler
+  compiler: {
+    styledComponents: true,
+  },
+  assetPrefix: '',
+}
 
-module.exports = {
-  // Bu yollar statik oluşturma sırasında atlanacak
-  skipStaticGeneration: [
-    '/admin/**', // Tüm admin sayfaları
-    '/api/**',   // Tüm API yolları
-    '/_not-found', // 404 sayfası
-    '/contact',  // İletişim sayfası
-    '/about'     // Hakkımızda sayfası
-  ]
-};
+module.exports = nextConfig

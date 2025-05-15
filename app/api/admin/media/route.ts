@@ -91,10 +91,15 @@ export async function GET() {
     
     return NextResponse.json(allMedia);
   } catch (error) {
-    console.error('Medya dosyaları listelenirken hata:', error);
-    return NextResponse.json({ 
+    console.error('Medya dosyaları listelenirken hata (detaylı):', error);
+    const errorMessage = error instanceof Error 
+      ? `${error.name}: ${error.message}` 
+      : String(error);
+      
+    return NextResponse.json({
       error: 'Medya dosyaları listelenirken hata oluştu',
-      details: error instanceof Error ? error.message : String(error)
+      details: errorMessage,
+      stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 }

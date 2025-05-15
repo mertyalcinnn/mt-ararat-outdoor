@@ -13,7 +13,15 @@
     "sync-db": "node scripts/sync-activities.js",
     "watch": "node scripts/watch-activities.js",
     "auto-clear": "node scripts/auto-cache-clear.js",
-    "check-config": "node scripts/check-config.js"
+    "check-config": "node scripts/check-config.js",
+    "fix-functions": "node fix-functions.js",
+    "fix-components": "node fix-nextjs-components.js",
+    "fix-build": "node fix-build-errors.js",
+    "fix-static-params": "node fix-static-params-conflicts.js",
+    "fix-api-metadata": "node fix-api-and-metadata.js",
+    "fix-server-exports": "node fix-server-exports.js",
+    "fix-all": "npm run fix-build && npm run fix-components && npm run fix-functions && npm run fix-static-params && npm run fix-api-metadata && npm run fix-server-exports",
+    "fix-and-rebuild": "bash fix-and-rebuild.sh"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.10",

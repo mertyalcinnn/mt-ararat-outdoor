@@ -1,3 +1,5 @@
+"use client";
+
 import Link from 'next/link';
 
 // Bu sayfa dynamic olarak işaretleniyor

@@ -6,17 +6,21 @@ import { MongoClient, Db, Collection, Document, WithId } from 'mongodb';
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || 'mt-ararat-outdoor';
 
-// Bağlantı nesnesini önbelleğe alın (geliştirme ortamında sık hot-reload'lar için)
+// Bağlantı nesnesi önbelleğe alın (geliştirme ortamında sık hot-reload'lar için)
 let cachedClient: MongoClient | null = null;
 let cachedDb: Db | null = null;
 
-// MONGODB_URI olmasa bile hatayı göğüsle ve devam et
-if (!MONGODB_URI) {
-  console.warn('MongoDB URI tanımlanmamış. Lütfen .env.local dosyasını kontrol edin.');
-}
+// MongoDB bağlantıyı atlamak için bayrak
+const SKIP_MONGODB = process.env.SKIP_MONGODB === 'true';
 
-// MongoDB'ye bağlanma
+// MongoDB'ye bağlanma - zaman aşımı kontrolü ile
 export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
+  // MongoDB'yi atla
+  if (SKIP_MONGODB) {
+    console.log('SKIP_MONGODB=true olduğu için MongoDB bağlantısı atlanıyor');
+    throw new Error('MongoDB connection skipped by configuration');
+  }
+  
   // Önbellekteki bağlantıyı kullan
   if (cachedClient && cachedDb) {
     console.log('MongoDB önbellek bağlantısı kullanılıyor.');
@@ -25,30 +29,34 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
 
   // MONGODB_URI kontrolü
   if (!MONGODB_URI) {
-    console.error('MongoDB URI tanımlanmamış. Varsayılan DB kullanılacak.');
-    // Boş başarısız bağlantı döndür
-    return { client: null as any, db: null as any };
+    console.error('MongoDB URI tanımlanmamış.');
+    throw new Error('MongoDB URI missing');
   }
 
-  // Yeni bağlantı oluştur
   try {
-    console.log('MongoDB bağlantısı kuruluyor...');
+    // Daha kısa bir zaman aşımı kullan - 3 saniye (daha önce 5 idi)
+    const timeoutMs = 3000;
+    
+    console.log(`MongoDB bağlantısı kuruluyor (${timeoutMs}ms timeout)...`);
+    
+    // Promise oluştur ve race ile zaman aşımı kontrolü yap
     const client = new MongoClient(MONGODB_URI!);
     
-    // 5 saniye timeout ile bağlantı kur
     const connectPromise = client.connect();
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('MongoDB bağlantı zaman aşımı')), 5000);
+    const timeoutPromise = new Promise<MongoClient>((_, reject) => {
+      setTimeout(() => reject(new Error('MongoDB bağlantı zaman aşımı')), timeoutMs);
     });
     
-    await Promise.race([connectPromise, timeoutPromise]);
+    // Hangisi önce tamamlanırsa (ya bağlantı ya da zaman aşımı)
+    const connectedClient = await Promise.race([connectPromise, timeoutPromise]);
     
+    // Zaman aşımı olmadan bağlantı başarılı olduysa, db'ye erişmeyi dene
     const db = client.db(MONGODB_DB);
     
-    // Basit kontrol yap - db erişilebilir mi
+    // Basit bir ping komutu ile bağlantıyı test et
     await db.command({ ping: 1 });
     
-    // Bağlantıyı önbelleğe al
+    // Bağlantı başarılı, önbelleğe al
     cachedClient = client;
     cachedDb = db;
     
@@ -56,10 +64,10 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     return { client, db };
   } catch (error) {
     console.error('MongoDB bağlantı hatası:', error);
-    // Hata durumunda boş nesneler döndür, böylece uygulama çökmez
+    // Bağlantı başarısız, önbelleği temizle
     cachedClient = null;
     cachedDb = null;
-    return { client: null as any, db: null as any };
+    throw error; // Hatayı yukarı fırlat
   }
 }
 
@@ -71,6 +79,13 @@ export async function find<T extends Document>(
 ): Promise<WithId<T>[]> {
   try {
     const { db } = await connectToDatabase();
+    
+    // db null kontrolü
+    if (!db) {
+      console.error(`MongoDB ${collection} collection erişimi başarısız - db null`);
+      return [];
+    }
+    
     return await db.collection<T>(collection).find(query, options).toArray();
   } catch (error) {
     console.error(`MongoDB ${collection} sorgu hatası:`, error);
@@ -85,6 +100,13 @@ export async function findOne<T extends Document>(
 ): Promise<WithId<T> | null> {
   try {
     const { db } = await connectToDatabase();
+    
+    // db null kontrolü
+    if (!db) {
+      console.error(`MongoDB ${collection} collection erişimi başarısız - db null`);
+      return null;
+    }
+    
     return await db.collection<T>(collection).findOne(query);
   } catch (error) {
     console.error(`MongoDB ${collection} tek döküman sorgu hatası:`, error);
@@ -188,42 +210,36 @@ export async function getActivityBySlugFromDB(slug: string) {
 
 // MongoDB'den hakkımızda verilerini getir
 export async function getAboutData() {
+  'use server';
+  
   try {
     console.log('MongoDB\'den hakkımızda verileri alınıyor...');
-    const aboutData = await findOne('about', {});
-    if (aboutData) {
-      console.log('MongoDB\'den hakkımızda verileri alındı.');
-      return aboutData;
-    } else {
-      console.warn('MongoDB\'de hakkımızda verisi bulunamadı, JSON dosyasına geri dönülüyor.');
-      // JSON dosyasından veri alma işlemi
-      const fs = require('fs');
-      const path = require('path');
-      const aboutJsonPath = path.join(process.cwd(), 'about.json');
+    
+    // MongoDB bağlantısını kontrol et - zaman aşımı için Promise.race kullan
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('getAboutData zaman aşımı')), 2000);
+    });
+    
+    try {
+      // Hızlı zaman aşımı için race kullan
+      const aboutDataPromise = findOne('about', {});
+      const result = await Promise.race([aboutDataPromise, timeoutPromise]);
       
-      if (fs.existsSync(aboutJsonPath)) {
-        return JSON.parse(fs.readFileSync(aboutJsonPath, 'utf8'));
+      if (result) {
+        console.log('MongoDB\'den hakkımızda verileri alındı.');
+        // _id alanını JSON serileştirmede sorun yaratmaması için temizle
+        const { _id, ...cleanData } = result;
+        return cleanData;
       } else {
-        console.error('about.json dosyası bulunamadı!');
+        console.warn('MongoDB\'de hakkımızda verisi bulunamadı, JSON dosyasına geri dönülüyor.');
         return null;
       }
+    } catch (findError) {
+      console.error('MongoDB about sorgusu başarısız:', findError);
+      return null;
     }
   } catch (error) {
     console.error('MongoDB\'den hakkımızda verileri alınamadı:', error);
-    // Hata durumunda fallback olarak JSON dosyasından veri almayı dene
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const aboutJsonPath = path.join(process.cwd(), 'about.json');
-      
-      if (fs.existsSync(aboutJsonPath)) {
-        console.log('Hata sonrası JSON dosyasından hakkımızda verileri alınıyor...');
-        return JSON.parse(fs.readFileSync(aboutJsonPath, 'utf8'));
-      }
-    } catch (jsonError) {
-      console.error('JSON dosyasından hakkımızda verileri alınamadı:', jsonError);
-    }
-    
     return null;
   }
 }

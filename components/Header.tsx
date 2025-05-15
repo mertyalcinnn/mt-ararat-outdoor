@@ -1,21 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { locales, localeNames, Locale } from "@/lib/i18n";
-import { getDictionary } from "@/dictionaries";
 import { siteConfig } from "@/config/site";
 
-export default function Header({ lang }: { lang: Locale }) {
+export default function Header({ lang, navigation }: { lang: Locale, navigation: any }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const pathname = usePathname();
-
-  const dictionary = getDictionary(lang);
-  const { navigation } = dictionary;
 
   // Mevcut URL'den dil kodu olmadan path'i alır
   const getPathWithoutLang = () => {
@@ -49,7 +45,10 @@ export default function Header({ lang }: { lang: Locale }) {
     >
       <div className="container-custom">
         <div className="flex items-center justify-between">
-          <Link href={`/${lang}`} className="flex items-center ml-0 md:ml-0 lg:-ml-6 md:-ml-4">
+          <Link
+            href={`/${lang}`}
+            className="flex items-center ml-0 md:ml-0 lg:-ml-6 md:-ml-4"
+          >
             <div className="relative h-16 w-16 mr-2">
               <Image
                 src={siteConfig.logo}
@@ -58,7 +57,7 @@ export default function Header({ lang }: { lang: Locale }) {
                 height={64}
                 className="object-contain"
                 style={{
-                  filter: scrolled ? "none" : "brightness(0) invert(1)"
+                  filter: scrolled ? "none" : "brightness(0) invert(1)",
                 }}
               />
             </div>

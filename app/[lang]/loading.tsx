@@ -1,3 +1,5 @@
+"use client";
+
 // Dil sayfaları için loading component'i
 export default function Loading() {
   return (

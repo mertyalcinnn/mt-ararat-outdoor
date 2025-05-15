@@ -97,6 +97,8 @@ Aktivitenin detaylı açıklaması buraya girilecek. Bu alan Markdown formatın�
         gallery: activity.gallery.filter(img => img.trim() !== '')
       };
       
+      console.log('Yeni aktivite ekleniyor:', cleanedActivity);
+      
       // Yeni aktiviteyi API'ye gönder
       const response = await fetch('/api/admin/activities/new', {
         method: 'POST',
@@ -106,17 +108,29 @@ Aktivitenin detaylı açıklaması buraya girilecek. Bu alan Markdown formatın�
         body: JSON.stringify(cleanedActivity),
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        alert('Aktivite başarıyla oluşturuldu!');
-        router.push('/admin/dashboard/activities');
-      } else {
-        const errorData = await response.json();
-        alert(`Hata: ${errorData.error || 'Bilinmeyen bir hata oluştu'}`);
+      // Yanıt text olarak alınıyor ve debug için loglanıyor
+      const responseText = await response.text();
+      console.log('API yanıtı (text):', responseText);
+      
+      let data;
+      try {
+        // Yanıtı JSON olarak ayrıştırmayı dene
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        // Eğer yanıt JSON değilse hata fırlat
+        console.error('API yanıtı JSON olarak ayrıştırılamadı:', jsonError);
+        throw new Error(`Geçersiz API yanıtı: ${responseText.slice(0, 100)}...`);
       }
+      
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}: ${data.details || 'Bilinmeyen bir hata oluştu'}`);
+      }
+      
+      alert('Aktivite başarıyla oluşturuldu!');
+      router.push('/admin/dashboard/activities');
     } catch (error) {
       console.error('Kaydetme hatası:', error);
-      alert('Bir hata oluştu!');
+      alert('Bir hata oluştu: ' + (error instanceof Error ? error.message : 'Bilinmeyen bir hata'));
     } finally {
       setIsSaving(false);
     }

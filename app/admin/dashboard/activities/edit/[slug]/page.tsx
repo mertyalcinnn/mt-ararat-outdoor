@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AdvancedImageUploader from '@/components/AdvancedImageUploader';
 
 interface Activity {
   title: string;
@@ -104,21 +105,39 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
     setError(null);
     
     try {
-      const response = await fetch(`/api/admin/activities/${slug}`, {
-        method: 'PUT',
+      console.log(`${slug} aktivitesini güncellemek için API isteği yapılıyor...`);
+      // PUT yerine POST kullanıyoruz ve farklı bir endpoint kullanıyoruz
+      const response = await fetch(`/api/admin/activities/edit`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(activity),
+        body: JSON.stringify({
+          ...activity,
+          slug: slug // Orijinal slug'ı da gönderelim
+        }),
       });
       
-      if (response.ok) {
-        alert('Aktivite başarıyla güncellendi!');
-        router.push('/admin/dashboard/activities');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Bilinmeyen bir hata oluştu');
+      // Yanıt text olarak alınıyor ve debug için loglanıyor
+      const responseText = await response.text();
+      console.log('API yanıtı (text):', responseText);
+      
+      let data;
+      try {
+        // Yanıtı JSON olarak ayrıştırmayı dene
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        // Eğer yanıt JSON değilse hata fırlat
+        console.error('API yanıtı JSON olarak ayrıştırılamadı:', jsonError);
+        throw new Error(`Geçersiz API yanıtı: ${responseText.slice(0, 100)}...`);
       }
+      
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}: ${data.details || 'Bilinmeyen bir hata oluştu'}`);
+      }
+      
+      alert('Aktivite başarıyla güncellendi!');
+      router.push('/admin/dashboard/activities');
     } catch (err) {
       console.error('Save error:', err);
       setError(err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu');
@@ -251,26 +270,11 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
               
               <div>
                 <label className="block mb-1 font-medium">Kapak Görseli:</label>
-                <input
-                  type="text"
-                  value={activity.coverImage}
-                  onChange={(e) => handleInputChange('coverImage', e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded"
-                  placeholder="/images/your-image.jpg"
+                <AdvancedImageUploader
+                  onImageSelect={(imageUrl) => handleInputChange('coverImage', imageUrl)}
+                  currentImageUrl={activity.coverImage}
+                  label="Kapak Görseli"
                 />
-                {activity.coverImage && (
-                  <div className="mt-2 border border-gray-200 p-2 rounded">
-                    <img 
-                      src={activity.coverImage}
-                      alt="Kapak görseli önizleme"
-                      className="h-32 w-auto object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "https://via.placeholder.com/150?text=Görsel+Yok";
-                      }}
-                    />
-                  </div>
-                )}
               </div>
               
               <div>
@@ -377,7 +381,7 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
               <label className="font-medium">Galeri Görselleri:</label>
               <button 
                 type="button"
-                onClick={() => addArrayItem('gallery', '/images/')}
+                onClick={() => addArrayItem('gallery', '')}
                 className="bg-green-500 hover:bg-green-700 text-white text-sm px-2 py-1 rounded"
               >
                 + Görsel Ekle
@@ -387,30 +391,15 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {activity.gallery.map((image, idx) => (
                 <div key={idx} className="border border-gray-200 p-3 rounded">
-                  <input
-                    type="text"
-                    value={image}
-                    onChange={(e) => handleArrayChange('gallery', idx, e.target.value)}
-                    className="w-full border border-gray-300 p-2 rounded mb-2"
-                    placeholder="/images/gallery-image.jpg"
+                  <AdvancedImageUploader
+                    onImageSelect={(url) => handleArrayChange('gallery', idx, url)}
+                    currentImageUrl={image}
+                    label={`Galeri Görseli ${idx + 1}`}
                   />
-                  {image && (
-                    <div className="mb-2 border border-gray-200 p-2 rounded">
-                      <img 
-                        src={image}
-                        alt={`Galeri görseli ${idx + 1}`}
-                        className="h-24 w-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://via.placeholder.com/150?text=Görsel+Yok";
-                        }}
-                      />
-                    </div>
-                  )}
                   <button 
                     type="button"
                     onClick={() => removeArrayItem('gallery', idx)}
-                    className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded w-full"
+                    className="mt-2 bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded w-full"
                   >
                     Bu Görseli Kaldır
                   </button>

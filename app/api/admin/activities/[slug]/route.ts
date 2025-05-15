@@ -140,10 +140,22 @@ export async function GET(
     }
     
     // Her iki kaynakta da bulunamadıysa 404 döndür
-    return NextResponse.json(
-      { error: 'Aktivite bulunamadı' },
-      { status: 404 }
-    );
+    console.log(`${slug} aktivitesi hem MongoDB'de hem de dosya sisteminde bulunamadı`);
+    // Burada 404 yanıtı dönmek yerine placeholder bir veri dönelim (sadece edit sayfasının çalışması için)
+    return NextResponse.json({
+      slug: slug,
+      title: "Yeni Aktivite",
+      description: "Bu aktivite mevcut değil. Kaydettiğinizde yeni bir aktivite olarak oluşturulacaktır.",
+      content: "# Yeni Aktivite\n\nBu aktivite sisteminizde bulunamadı. Bilgileri girerek yeni bir aktivite oluşturabilirsiniz.",
+      coverImage: "",
+      gallery: [],
+      duration: "",
+      difficultyLevel: "Orta",
+      includedServices: ["Rehberlik", "Ulaşım", "Ekipman"],
+      contactWhatsapp: "",
+      featured: false,
+      isNewPlaceholder: true  // Bu özel alanla bu aktivitenin gerçekte mevcut olmadığını belirtelim
+    });
     
   } catch (error) {
     console.error('Aktivite alınırken hata:', error);
@@ -164,6 +176,13 @@ export async function PUT(
     console.log(`PUT /api/admin/activities/${slug} isteği alındı.`);
     
     const activityData = await request.json();
+    
+    // Slug değiştirilmediyse doğrudan güncelle
+    let finalSlug = slug;
+    if (activityData.slug && activityData.slug !== slug) {
+      finalSlug = activityData.slug;
+      console.log(`Aktivite slug değişimi: ${slug} -> ${finalSlug}`);
+    }
     
     // Önce MongoDB'den aktiviteyi almayı dene
     let existingActivity = null;
@@ -190,19 +209,58 @@ export async function PUT(
       }
     }
     
-    // Her iki kaynakta da bulunamadıysa 404 döndür
+    // Her iki kaynakta da bulunamadıysa yeni bir aktivite oluştur
     if (!existingActivity) {
-      return NextResponse.json(
-        { error: 'Güncellenecek aktivite bulunamadı' },
-        { status: 404 }
-      );
-    }
-    
-    // Slug değiştirilmediyse doğrudan güncelle
-    let finalSlug = slug;
-    if (activityData.slug && activityData.slug !== slug) {
-      finalSlug = activityData.slug;
-      console.log(`Aktivite slug değişimi: ${slug} -> ${finalSlug}`);
+      console.log(`${slug} aktivitesi güncelleme için bulunamadı. Yeni aktivite olarak oluşturulacak.`);
+      
+      // Aktivite yok, yeni oluşturuluyor
+      const newActivity = {
+        ...activityData,
+        slug: finalSlug,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      // Veritabanına kaydet
+      let dbResult = false;
+      try {
+        console.log('Yeni aktivite MongoDB\'ye kaydediliyor...');
+        const insertResult = await updateOne('activities', { slug: finalSlug }, newActivity, { upsert: true });
+        dbResult = !!insertResult;
+        console.log('MongoDB kayıt sonucu:', insertResult);
+      } catch (dbError) {
+        console.error('MongoDB kayıt hatası:', dbError);
+      }
+      
+      // JSON dosyasına kaydet
+      let fileResult = false;
+      try {
+        const jsonActivity = await syncActivityToJson(newActivity);
+        fileResult = !!jsonActivity;
+        console.log(`Aktivite JSON dosyasına kaydedildi: ${finalSlug}`);
+      } catch (fileError) {
+        console.error('Aktivite JSON dosyasına yazılırken hata:', fileError);
+      }
+      
+      // Her iki kaynak da başarısız olduysa hata döndür
+      if (!dbResult && !fileResult) {
+        return NextResponse.json(
+          { error: 'Aktivite oluşturulamadı. Hem veritabanı hem de dosya sistemi başarısız oldu.' },
+          { status: 500 }
+        );
+      }
+      
+      // Önbelleği temizleme işlemini gerçekleştir
+      const revalidateResult = await revalidatePages();
+      
+      return NextResponse.json({ 
+        success: true,
+        activity: newActivity,
+        isNew: true,
+        savedToMongo: dbResult,
+        savedToFile: fileResult,
+        revalidated: !!revalidateResult
+      });
     }
     
     const updatedActivity = {
@@ -271,6 +329,103 @@ export async function PUT(
   }
 }
 
+// POST - İşlem türüne göre aksiyon al (silme işlemi için)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const { slug } = params;
+    console.log(`POST /api/admin/activities/${slug} isteği alındı.`);
+    
+    // İstek gövdesini al
+    const body = await request.json();
+    
+    // Silme işlemini kontrol et
+    if (body && body._action === "delete") {
+      console.log(`Silme işlemi algılandı: ${slug}`);
+      return handleDeleteRequest(slug);
+    }
+    
+    // Desteklenmeyen aksiyon
+    return NextResponse.json(
+      { error: 'Desteklenmeyen işlem türü' },
+      { status: 400 }
+    );
+    
+  } catch (error) {
+    console.error('POST işlemi sırasında hata:', error);
+    return NextResponse.json(
+      { error: 'İşlem gerçekleştirilemedi', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+// Silme işlemi için yardımcı fonksiyon
+async function handleDeleteRequest(slug: string) {
+  if (!slug) {
+    return NextResponse.json(
+      { error: 'Aktivite slug bilgisi eksik' },
+      { status: 400 }
+    );
+  }
+  
+  // Veritabanından sil
+  let dbResult = false;
+  try {
+    const deleteResult = await deleteOne('activities', { slug });
+    
+    if (deleteResult) {
+      dbResult = !!(deleteResult.deletedCount > 0);
+      console.log(`Aktivite MongoDB'den silindi: ${slug} (Silinen: ${deleteResult.deletedCount})`);
+    } else {
+      console.log(`deleteOne null sonuç döndü: ${slug}`);
+    }
+  } catch (dbError) {
+    console.error(`Aktivite MongoDB'den silinirken hata:`, dbError);
+  }
+  
+  // JSON dosyasını da sil
+  let fileResult = false;
+  try {
+    fileResult = await deleteActivityJson(slug);
+    console.log(`JSON dosyası silme sonucu: ${fileResult ? 'Başarılı' : 'Başarısız'}`);
+  } catch (fileError) {
+    console.error('JSON dosyası silinirken hata:', fileError);
+  }
+  
+  // Her iki kaynak da başarısız olduysa ve aktivite bulunamadıysa hata döndür
+  if (!dbResult && !fileResult) {
+    // Dosya sisteminde bir kez daha bakalım
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'data', 'activities', `${slug}.json`);
+      
+      if (!fs.existsSync(filePath)) {
+        return NextResponse.json(
+          { error: 'Aktivite bulunamadı veya silinemedi' },
+          { status: 404 }
+        );
+      }
+    } catch (fsError) {
+      console.error('Dosya sistemi kontrolü hatası:', fsError);
+    }
+  }
+  
+  // Önbelleği temizleme işlemini gerçekleştir
+  const revalidateResult = await revalidatePages();
+  
+  return NextResponse.json({ 
+    success: true,
+    message: `${slug} aktivitesi başarıyla silindi.`,
+    deletedFromMongo: dbResult,
+    deletedFromFile: fileResult,
+    revalidated: !!revalidateResult
+  });
+}
+
 // DELETE - Aktiviteyi sil
 export async function DELETE(
   request: NextRequest,
@@ -280,66 +435,7 @@ export async function DELETE(
     const { slug } = params;
     console.log(`DELETE /api/admin/activities/${slug} isteği alındı.`);
     
-    if (!slug) {
-      return NextResponse.json(
-        { error: 'Aktivite slug bilgisi eksik' },
-        { status: 400 }
-      );
-    }
-    
-    // Veritabanından sil
-    let dbResult = false;
-    try {
-      const deleteResult = await deleteOne('activities', { slug });
-      dbResult = !!(deleteResult && deleteResult.deletedCount > 0);
-      
-      if (dbResult) {
-        console.log(`Aktivite MongoDB'den silindi: ${slug}`);
-      } else {
-        console.log(`Aktivite MongoDB'de bulunamadı veya silinemedi: ${slug}`);
-      }
-    } catch (dbError) {
-      console.error(`Aktivite MongoDB'den silinirken hata:`, dbError);
-    }
-    
-    // JSON dosyasını da sil
-    let fileResult = false;
-    try {
-      fileResult = await deleteActivityJson(slug);
-      console.log(`JSON dosyası silme sonucu: ${fileResult ? 'Başarılı' : 'Başarısız'}`);
-    } catch (fileError) {
-      console.error('JSON dosyası silinirken hata:', fileError);
-    }
-    
-    // Her iki kaynak da başarısız olduysa ve aktivite bulunamadıysa hata döndür
-    if (!dbResult && !fileResult) {
-      // Dosya sisteminde bir kez daha bakalım
-      try {
-        const fs = require('fs');
-        const path = require('path');
-        const filePath = path.join(process.cwd(), 'data', 'activities', `${slug}.json`);
-        
-        if (!fs.existsSync(filePath)) {
-          return NextResponse.json(
-            { error: 'Aktivite bulunamadı veya silinemedi' },
-            { status: 404 }
-          );
-        }
-      } catch (fsError) {
-        console.error('Dosya sistemi kontrolü hatası:', fsError);
-      }
-    }
-    
-    // Önbelleği temizleme işlemini gerçekleştir
-    const revalidateResult = await revalidatePages();
-    
-    return NextResponse.json({ 
-      success: true,
-      message: `${slug} aktivitesi başarıyla silindi.`,
-      deletedFromMongo: dbResult,
-      deletedFromFile: fileResult,
-      revalidated: !!revalidateResult
-    });
+    return handleDeleteRequest(slug);
     
   } catch (error) {
     console.error('Aktivite silinirken hata:', error);

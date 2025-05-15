@@ -1,7 +1,34 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
+
+// Yardımcı fonksiyonlar
+const fixImagePath = (url: string): string => {
+  if (!url) return '';
+  
+  // URL zaten tam ise (http:// veya https:// ile başlıyorsa) aynen kullan
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // URL göreli ise (/ ile başlıyorsa) tam URL oluştur
+  if (url.startsWith('/')) {
+    // Eğer tarayıcı ortamında değilse (SSR sırasında), boş döndür
+    if (typeof window === 'undefined') return url;
+    
+    // Dil kodunu (TR, EN vb.) URL'den çıkar
+    // Örnek: /tr/uploads/image.jpg → /uploads/image.jpg
+    if (url.match(/^\/[a-z]{2}\/uploads\//i)) {
+      url = url.replace(/^\/[a-z]{2}(\/uploads\/.*)$/i, '$1');
+      console.log('Dil kodu çıkarıldı, yeni URL:', url);
+    }
+    
+    return `${window.location.origin}${url}`;
+  }
+  
+  // URL belirsiz bir formatta ise, olduğu gibi döndür
+  return url;
+};
 
 type MediaItem = {
   name: string;
@@ -31,7 +58,9 @@ export default function AdvancedImageUploader({
   const [galleryImages, setGalleryImages] = useState<MediaItem[]>([]);
   const [isLoadingGallery, setIsLoadingGallery] = useState(false);
   const [clientReady, setClientReady] = useState(false);
+  const [isDragging, setIsDragging] = useState(false); // Sürükle-bırak durumunu takip etmek için
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropAreaRef = useRef<HTMLDivElement>(null);
 
   // Client tarafında render edildiğinden emin ol
   useEffect(() => {
@@ -48,39 +77,99 @@ export default function AdvancedImageUploader({
     }
   }, [activeTab]);
 
+  // Sürükle-bırak olay yöneticileri
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    // Otomatik olarak upload sekmesine geç
+    setActiveTab('upload');
+    
+    // Dosyayı al
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      // Dosya türünü kontrol et
+      if (!file.type.startsWith('image/')) {
+        setError('Lütfen sadece görsel dosyası yüleyin (jpeg, png, gif, vb.).');
+        return;
+      }
+      
+      // Dosya boyutunu kontrol et
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Dosya boyutu çok büyük. Lütfen 10MB\'dan küçük bir dosya seçin.');
+        return;
+      }
+      
+      // Dosyayı yükle
+      uploadFile(file);
+    }
+  };
+
   // Galeri resimlerini yükle
   const loadGalleryImages = async () => {
     setIsLoadingGallery(true);
     setError(null);
     
     try {
-      const response = await fetch('/api/admin/media');
+      console.log('Galeri resimleri için API isteği yapılıyor');
+      const response = await fetch('/api/admin/media', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       
-      if (!response.ok) {
-        throw new Error('Galeri resimleri yüklenemedi');
+      // Yanıtın içeriğini text olarak al
+      const responseText = await response.text();
+      
+      // JSON olarak ayrıştırmayı dene
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('API yanıtı JSON değil:', responseText.slice(0, 100) + '...');
+        throw new Error(`Galeri için geçersiz yanıt: ${responseText.slice(0, 50)}...`);
       }
       
-      const data: MediaItem[] = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}: Galeri resimleri yüklenemedi`);
+      }
+      
+      console.log('Galeri resimleri başarıyla yüklendi:', data.length);
       setGalleryImages(data);
     } catch (err) {
-      console.error('Galeri resimleri yüklenirken hata:', err);
-      setError('Galeri resimleri yüklenemedi. Lütfen daha sonra tekrar deneyin.');
+      console.error('Galeri resimleri yüklenirken hata (detaylı):', err);
+      setError(err instanceof Error ? err.message : 'Galeri resimleri yüklenemedi. Lütfen daha sonra tekrar deneyin.');
     } finally {
       setIsLoadingGallery(false);
     }
   };
 
-  // PC'den dosya yükleme
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Dosya boyutu kontrolü (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Dosya boyutu çok büyük. Lütfen 10MB\'dan küçük bir dosya seçin.');
-      return;
-    }
-    
+  // Dosya yükleme fonksiyonu (hem sürükle-bırak hem de seçim için)
+  const uploadFile = async (file: File) => {
     // Geçici önizleme
     const fileUrl = URL.createObjectURL(file);
     setPreviewUrl(fileUrl);
@@ -90,6 +179,8 @@ export default function AdvancedImageUploader({
     setError(null);
     
     try {
+      console.log('Dosya yükleniyor:', file.name, file.type, `${(file.size / 1024).toFixed(2)}KB`);
+      
       const formData = new FormData();
       formData.append('file', file);
       
@@ -98,20 +189,64 @@ export default function AdvancedImageUploader({
         body: formData,
       });
       
+      // HTTP durum kodunu kontrol et
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Dosya yüklenemedi');
+        if (response.status === 413) {
+          throw new Error('Dosya boyutu çok büyük.');
+        }
+        
+        // Yanıtın içeriğini text olarak al
+        const responseText = await response.text();
+        console.error('API yanıtı (hata):', responseText);
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          throw new Error(errorData.error || `HTTP ${response.status}: Dosya yüklenemedi`);
+        } catch (jsonError) {
+          throw new Error(`HTTP ${response.status}: Sunucudan geçersiz yanıt alındı`);
+        }
       }
       
-      const data = await response.json();
-      console.log('Yükleme başarılı:', data);
+      // Yanıtın içeriğini text olarak al
+      const responseText = await response.text();
+      
+      // JSON olarak ayrıştırmayı dene
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Yükleme başarılı, sunucu yanıtı:', data);
+      } catch (parseError) {
+        console.error('API yanıtı JSON değil:', responseText.slice(0, 100) + '...');
+        throw new Error(`API geçersiz yanıt döndürdü: ${responseText.slice(0, 50)}...`);
+      }
       
       // URL'yi parent component'e bildir
-      onImageSelect(data.url);
-      setPreviewUrl(data.url);
+      if (data.fullUrl) {
+        // API tam URL döndürüyorsa, onu kullan (Next.js 13+ için daha güvenli)
+        let fixedUrl = fixImagePath(data.fullUrl);
+        // URL'de hala dil kodu varsa temizle
+        if (fixedUrl.match(/\/[a-z]{2}\/uploads\//i)) {
+          fixedUrl = fixedUrl.replace(/\/([a-z]{2})\/uploads\//i, '/uploads/');
+        }
+        console.log('Tam URL kullanılıyor:', fixedUrl);
+        onImageSelect(fixedUrl);
+        setPreviewUrl(fixedUrl);
+      } else if (data.url) {
+        // Göreli URL'yi düzelt
+        let fixedUrl = fixImagePath(data.url);
+        // URL'de hala dil kodu varsa temizle
+        if (fixedUrl.match(/\/[a-z]{2}\/uploads\//i)) {
+          fixedUrl = fixedUrl.replace(/\/([a-z]{2})\/uploads\//i, '/uploads/');
+        }
+        console.log('Göreli URL düzeltildi:', fixedUrl);
+        onImageSelect(fixedUrl);
+        setPreviewUrl(fixedUrl);
+      } else {
+        throw new Error('Sunucu geçerli bir URL döndürmedi');
+      }
       
     } catch (error) {
-      console.error('Yükleme hatası:', error);
+      console.error('Yükleme hatası (detaylı):', error);
       setError(error instanceof Error ? error.message : 'Dosya yüklenirken bir hata oluştu');
       // Hata durumunda önizlemeyi kaldır veya eski haline getir
       if (!currentImageUrl) {
@@ -128,29 +263,74 @@ export default function AdvancedImageUploader({
     }
   };
 
+  // PC'den dosya yükleme
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Dosya boyutu kontrolü (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Dosya boyutu çok büyük. Lütfen 10MB\'dan küçük bir dosya seçin.');
+      return;
+    }
+    
+    // Dosyayı yükleme fonksiyonuna gönder
+    uploadFile(file);
+  };
+
   // URL ile resim ekleme
-  const handleUrlSubmit = () => {
+  const handleUrlSubmit = async () => {
     if (!imageUrl) {
       setError('Lütfen bir URL girin');
       return;
     }
     
     setError(null);
+    setIsUploading(true); // Yükleme durumunu başlat
     
     try {
+      // URL formatını kontrol et
       const url = new URL(imageUrl);
-      // URL'yi parent component'e bildir
+      
+      // Görsel var mı kontrol et - bir resim yüklemeyi dene
+      console.log('URL ile görsel erişimi kontrol ediliyor:', imageUrl);
+      
+      // Görsel ön yükleme yaparak kontrol etmeye çalış
+      const img = new Image();
+      
+      // Bir Promise ile resmin yüklenip yüklenmediğini kontrol edelim
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          console.log('Görsel başarıyla yüklendi');
+          resolve('success');
+        };
+        
+        img.onerror = () => {
+          reject(new Error('Görsele erişilemedi veya geçersiz görsel formatı'));
+        };
+        
+        // Src ataması en son yapılmalı, önce event listener'lar tanımlanmalı
+        img.src = imageUrl;
+      });
+            
+      // Başarılıysa URL'yi parent component'e bildir
       onImageSelect(imageUrl);
       setPreviewUrl(imageUrl);
     } catch (error) {
-      setError('Geçersiz URL formatı. Lütfen tam URL adresini girin (örn: https://example.com/image.jpg)');
+      console.error('URL görsel hatası:', error);
+      setError(error instanceof Error 
+        ? error.message 
+        : 'Geçersiz URL formatı. Lütfen tam URL adresini girin (örn: https://example.com/image.jpg)');
+    } finally {
+      setIsUploading(false);
     }
   };
 
   // Galeriden resim seçme
   const handleGallerySelect = (image: MediaItem) => {
-    onImageSelect(image.url);
-    setPreviewUrl(image.url);
+    const fixedUrl = fixImagePath(image.url);
+    onImageSelect(fixedUrl);
+    setPreviewUrl(fixedUrl);
   };
 
   // Dosya seçme dialog'unu aç
@@ -161,12 +341,79 @@ export default function AdvancedImageUploader({
   // Görüntü hata yakalama işleyicisi
   const handleImageError = () => {
     console.error('Görüntü yükleme hatası:', previewUrl);
-    setError('Görüntü gösterilirken hata oluştu');
-    // Doğrudan state güncellemesi yerine timeout kullanarak
-    // React işlem sırasını bozmamak için güvenli gecikme ekleyelim
+    
+    // URL'nin dil kodu içerip içermediğini kontrol et
+    if (previewUrl && previewUrl.match(/\/[a-z]{2}\/uploads\//i)) {
+      // Dil kodunu (TR, EN vb.) URL'den çıkar
+      const fixedUrl = previewUrl.replace(/\/([a-z]{2})\/uploads\//i, '/uploads/');
+      console.log('URL\'den dil kodu çıkarıldı, yeni URL:', fixedUrl);
+      
+      // Yeni URL'yi dene
+      setPreviewUrl(fixedUrl);
+      onImageSelect(fixedUrl);
+      return; // Düzelttikten sonra fonksiyondan çık
+    }
+    
+    // Tam URL ile başlayan bir URL mi kontrol et
+    if (previewUrl.startsWith('http://') || previewUrl.startsWith('https://')) {
+      // URL'yi parçalara ayır
+      try {
+        const url = new URL(previewUrl);
+        // Sadece path kısmını al ve dil kodunu kaldır
+        let path = url.pathname;
+        if (path.match(/^\/[a-z]{2}\/uploads\//i)) {
+          path = path.replace(/^\/[a-z]{2}(\/uploads\/.*)$/i, '$1');
+          const fixedUrl = `${url.origin}${path}`;
+          console.log('Tam URL\'den dil kodu çıkarıldı, yeni URL:', fixedUrl);
+          setPreviewUrl(fixedUrl);
+          onImageSelect(fixedUrl);
+          return;
+        }
+      } catch (urlError) {
+        console.error('URL ayrıştırma hatası:', urlError);
+      }
+    }
+    
+    // Diğer düzeltme yöntemleri
+    // URL'nin başında "/" olup olmadığını kontrol et
+    if (previewUrl.startsWith('/')) {
+      if (!previewUrl.startsWith('/uploads/')) {
+        // Eğer /uploads/ ile başlamıyorsa, başına ekleyelim
+        const fixedUrl = `/uploads/${previewUrl.startsWith('/') ? previewUrl.slice(1) : previewUrl}`;
+        console.log('URL /uploads/ ile başlatıldı:', fixedUrl);
+        
+        const fullUrl = `${window.location.origin}${fixedUrl}`;
+        setPreviewUrl(fullUrl);
+        onImageSelect(fullUrl);
+        return;
+      }
+      
+      // Göreli URL'yi tam URL'ye çevirelim
+      const fullUrl = `${window.location.origin}${previewUrl}`;
+      console.log('Göreli URL tam URL\'ye çevrildi:', fullUrl);
+      setPreviewUrl(fullUrl);
+      onImageSelect(fullUrl);
+      return;
+    }
+    
+    // Hata mesajı göster
+    setError(`Görüntü yüklenemedi: ${previewUrl}. Görsel yolu doğru mu? Dosya mevcut mu?`);
+    
+    // Görseli temizle
     setTimeout(() => {
-      setPreviewUrl('');
-    }, 0);
+      // Eğer parent component'e bir seçim iletmişsek, onu da temizlemek amaçlı
+      if (previewUrl && previewUrl !== currentImageUrl) {
+        setPreviewUrl('');
+        onImageSelect('');
+      } else {
+        // Mevcut bir görsel varsa onu koruyalım
+        if (currentImageUrl) {
+          setPreviewUrl(currentImageUrl);
+        } else {
+          setPreviewUrl('');
+        }
+      }
+    }, 500);
   };
 
   // Client tarafında render edilene kadar bekle
@@ -225,17 +472,18 @@ export default function AdvancedImageUploader({
       {previewUrl && (
         <div className="px-4 pt-4">
           <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-300 bg-slate-100">
-            <Image 
-            src={previewUrl} 
-            alt="Seçilen Görsel" 
-            fill
-            sizes="(max-width: 768px) 100vw, 300px"
-            style={{ objectFit: 'contain' }}
-            className="rounded-lg"
-            onError={handleImageError}
-            loading="eager"
-            unoptimized={previewUrl.startsWith('blob:') || previewUrl.startsWith('data:')}
+            {/* Güvenli görüntü komponenti ile sarmalayalım */}
+            <img 
+              src={fixImagePath(previewUrl)}
+              alt="Seçilen Görsel" 
+              onError={handleImageError}
+              className="w-full h-full object-contain rounded-lg"
             />
+            
+            {/* Düzgün URL göster */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
+              {fixImagePath(previewUrl)}
+            </div>
           </div>
         </div>
       )}
@@ -254,6 +502,30 @@ export default function AdvancedImageUploader({
               onChange={handleFileUpload}
               ref={fileInputRef}
             />
+            
+            {/* Sürükle-Bırak Alanı */}
+            <div
+              ref={dropAreaRef}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`w-full h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer mb-3 transition-colors ${
+                isDragging 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+              }`}
+              onClick={triggerFileInput}
+            >
+              <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              <p className="text-sm text-gray-600">
+                {isDragging 
+                  ? 'Görseli Buraya Bırakın' 
+                  : 'Görsel Seçmek İçin Tıklayın veya Sürükleyin'}
+              </p>
+            </div>
             
             <button
               type="button"
@@ -338,18 +610,14 @@ export default function AdvancedImageUploader({
                     onClick={() => handleGallerySelect(image)}
                   >
                     <div className="aspect-square relative">
-                      <Image 
+                      {/* Next.js Image yerine normal img kullanalım */}
+                      <img 
                         src={image.url} 
                         alt={image.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        loading="lazy"
-                        sizes="100px"
-                        unoptimized={image.url.startsWith('blob:') || image.url.startsWith('data:')}
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           console.error(`Failed to load gallery image: ${image.url}`);
-                          e.currentTarget.src = '/images/placeholder-image.svg';
-                          setError(`Bir görsel yüklenemedi: ${image.name}. Başka bir görsel seçin.`);
+                          e.currentTarget.src = '/images/placeholder-image.jpg';
                         }}
                       />
                     </div>

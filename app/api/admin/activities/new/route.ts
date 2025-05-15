@@ -1,205 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findOne, updateOne } from '@/lib/mongodb';
+import { insertOne, updateOne, findOne } from '@/lib/mongodb';
 import { syncActivityToJson } from '@/lib/activities';
+import { revalidatePages } from '@/lib/revalidate';
+import { v4 as uuidv4 } from 'uuid';
 
-// Vercel derleme hatalarını önlemek için dinamik API yapılandırması
+// API rotasını dinamik olarak işaretle
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// Vercel derleme aşaması için gerekli statik parametre fonksiyonu
-export async function generateStaticParams() {
-  // API rotaları için boş parametre listesi döndür
-  return [];
-}
-
-// Slug oluşturma fonksiyonu
+// Slug oluşturmak için yardımcı fonksiyon
 function createSlug(title: string): string {
-  const slug = title
+  if (!title) return '';
+  
+  // Türkçe karakterleri ASCII karşılıklarıyla değiştir
+  const turkishCharMap: Record<string, string> = {
+    'ı': 'i', 'ğ': 'g', 'ü': 'u', 'ş': 's', 'ö': 'o', 'ç': 'c',
+    'İ': 'I', 'Ğ': 'G', 'Ü': 'U', 'Ş': 'S', 'Ö': 'O', 'Ç': 'C'
+  };
+  
+  let slug = title
     .toLowerCase()
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ı/g, 'i')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c')
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, '-');
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Alfanümerik olmayan karakterleri kaldır
+    .replace(/\s+/g, '-') // Boşlukları tire ile değiştir
+    .replace(/-+/g, '-'); // Birden fazla tireyi tek tireye indir
     
-  return slug;
-}
-
-// Slug'ın benzersiz olup olmadığını kontrol etme
-async function isSlugUnique(slug: string): Promise<boolean> {
-  try {
-    const existingActivity = await findOne('activities', { slug });
-    return !existingActivity;
-  } catch (error) {
-    console.error('Slug kontrol hatası:', error);
-    return false;
-  }
-}
-
-// Benzersiz bir slug oluştur
-async function generateUniqueSlug(title: string): Promise<string> {
-  let slug = createSlug(title);
-  let isUnique = await isSlugUnique(slug);
-  let counter = 1;
-  
-  // Eğer slug benzersiz değilse, sonuna sayı ekle
-  while (!isUnique) {
-    slug = `${createSlug(title)}-${counter}`;
-    isUnique = await isSlugUnique(slug);
-    counter++;
+  // Türkçe karakterleri değiştir
+  for (const [turkishChar, asciiChar] of Object.entries(turkishCharMap)) {
+    slug = slug.replace(new RegExp(turkishChar, 'g'), asciiChar);
   }
   
   return slug;
 }
 
-// POST - Yeni aktivite oluştur
-// Revalidate fonksiyonu - önbelleği temizler
-async function revalidatePages() {
-  console.log('Sayfalar yeniden oluşturuluyor...');
-  try {
-    // NEXT_PUBLIC_SITE_URL değerini kontrol et
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-    console.log(`NEXT_PUBLIC_SITE_URL: ${siteUrl || 'TANIMLANMAMIŞ'}`);
-    
-    // Tüm olası revalidate API'lerini dene
-    const revalidationEndpoints = [
-      // Birincil revalidation API
-      `${siteUrl}/api/revalidate`,
-      // Yedek olarak force-revalidate API
-      `${siteUrl}/api/force-revalidate`,
-      // Son çare olarak clear-cache API
-      `${siteUrl}/api/clear-cache`
-    ];
-    
-    // Göreli yollar için alternatif API'ler
-    if (!siteUrl) {
-      revalidationEndpoints.push('/api/revalidate');
-      revalidationEndpoints.push('/api/force-revalidate');
-      revalidationEndpoints.push('/api/clear-cache');
-    }
-    
-    // Birden fazla revalidation API'sini dene
-    for (const endpoint of revalidationEndpoints) {
-      try {
-        console.log(`${endpoint} çağrılıyor...`);
-        
-        const revalidateResponse = await fetch(endpoint, {
-          cache: 'no-store',
-          signal: AbortSignal.timeout(5000) // 5 saniye timeout
-        });
-        
-        if (revalidateResponse.ok) {
-          const result = await revalidateResponse.json();
-          console.log(`${endpoint} başarılı:`, result);
-          return result;
-        } else {
-          console.error(`${endpoint} hata döndü: ${revalidateResponse.status}`);
-        }
-      } catch (endpointError) {
-        console.error(`${endpoint} çağrılamadı:`, endpointError);
-      }
-    }
-    
-    // Hiçbir API çalışmadıysa
-    return null;
-  } catch (error) {
-    console.error('Revalidate hatası:', error);
-    return null;
-  }
-}
-
+// POST - Yeni aktivite ekle
 export async function POST(request: NextRequest) {
   try {
-    console.log('Yeni aktivite oluşturma isteği alındı.');
-    const activityData = await request.json();
+    console.log('POST /api/admin/activities/new isteği alındı.');
     
-    if (!activityData.title) {
-      return NextResponse.json(
-        { error: 'Aktivite başlığı gereklidir' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    
+    // Eğer slug yoksa veya boşsa başlıktan oluştur
+    if (!body.slug || body.slug.trim() === '') {
+      body.slug = createSlug(body.title);
+      console.log(`Başlıktan slug oluşturuldu: ${body.slug}`);
     }
     
-    // Slug oluştur veya gelen değeri kullan
-    let slug;
+    // Slug'ın benzersiz olup olmadığını kontrol et
     try {
-      slug = activityData.slug ? 
-        await generateUniqueSlug(activityData.slug) : 
-        await generateUniqueSlug(activityData.title);
+      const existingActivity = await findOne('activities', { slug: body.slug });
       
-      console.log(`Oluşturulan slug: ${slug}`);
-    } catch (slugError) {
-      console.error('Slug oluşturma hatası:', slugError);
-      return NextResponse.json(
-        { error: 'Slug oluşturulamadı', details: slugError instanceof Error ? slugError.message : String(slugError) },
-        { status: 500 }
-      );
+      if (existingActivity) {
+        console.log(`${body.slug} slug'ı ile bir aktivite zaten mevcut, benzersiz hale getiriliyor...`);
+        // Benzersiz bir slug oluştur
+        const randomSuffix = uuidv4().substring(0, 6);
+        body.slug = `${body.slug}-${randomSuffix}`;
+        console.log(`Yeni benzersiz slug: ${body.slug}`);
+      }
+    } catch (checkError) {
+      console.error('Slug kontrolü sırasında hata:', checkError);
     }
     
-    const newActivity = {
-      ...activityData,
-      slug,
-      // Eksik alanları varsayılan değerlerle doldur
-      gallery: activityData.gallery || [],
-      includedServices: activityData.includedServices || [],
-      contactWhatsapp: activityData.contactWhatsapp || '',
-      featured: activityData.featured || false,
-      content: activityData.content || '',
+    // Aktivite verilerini hazırla
+    const activityData = {
+      ...body,
       createdAt: new Date(),
       updatedAt: new Date()
     };
     
     // Veritabanına kaydet
-    let dbResult;
+    let dbResult = false;
     try {
-      console.log('Aktivite MongoDB\'ye kaydediliyor...');
-      dbResult = await updateOne('activities', { slug }, newActivity);
-      console.log('Aktivite MongoDB\'ye kaydedildi:', dbResult);
+      console.log('Yeni aktivite MongoDB\'ye kaydediliyor...');
+      const insertResult = await insertOne('activities', activityData);
+      dbResult = !!insertResult;
+      console.log('MongoDB kayıt sonucu:', !!insertResult);
     } catch (dbError) {
       console.error('MongoDB kayıt hatası:', dbError);
-      
-      // MongoDB veritabanına yazamadıysak yine de dosya sistemine yazmayı deneyebiliriz
-      // Yalnızca JSON kaydetme işlemine devam et
     }
     
-    // Ayrıca dosya sistemine kaydet (JSON olarak)
+    // JSON dosyasına kaydet
     let fileResult = false;
     try {
-      console.log('Aktivite JSON dosyasına kaydediliyor...');
-      const jsonActivity = syncActivityToJson(newActivity);
+      console.log('Aktivite JSON dosyasına yazılıyor...');
+      const jsonActivity = await syncActivityToJson(activityData);
       fileResult = !!jsonActivity;
-      console.log(`Aktivite JSON dosyasına da kaydedildi: ${slug}`);
+      console.log(`Aktivite JSON dosyasına kaydedildi: ${body.slug}`);
     } catch (fileError) {
-      console.error(`Aktivite JSON dosyasına yazılamadı:`, fileError);
+      console.error('Aktivite JSON dosyasına yazılırken hata:', fileError);
     }
     
-    // Her iki kayıt da başarısızsa hata döndür
+    // Her iki kaynak da başarısız olduysa hata döndür
     if (!dbResult && !fileResult) {
       return NextResponse.json(
-        { error: 'Aktivite kaydedilemedi. Hem veritabanı hem de dosya sistemi kaydı başarısız oldu.' },
+        { error: 'Aktivite kaydedilemedi. Hem veritabanı hem de dosya sistemi başarısız oldu.' },
         { status: 500 }
       );
     }
     
     // Önbelleği temizleme işlemini gerçekleştir
     const revalidateResult = await revalidatePages();
-
+    
     return NextResponse.json({ 
       success: true,
-      activity: newActivity,
-      savedToMongo: !!dbResult,
+      activity: activityData,
+      savedToMongo: dbResult,
       savedToFile: fileResult,
       revalidated: !!revalidateResult
     });
     
   } catch (error) {
-    console.error('Yeni aktivite oluşturulurken hata:', error);
+    console.error('API hatası:', error);
     return NextResponse.json(
-      { error: 'Aktivite oluşturulamadı', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Aktivite eklenemedi', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

@@ -132,6 +132,18 @@ export default function DashboardLayout({
               </Link>
               
               <Link 
+                href="/admin/dashboard/debug" 
+                className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                  isLinkActive('/admin/dashboard/debug') ? 'bg-teal-50 text-teal-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <i className={`fas fa-bug mr-3 text-lg ${
+                  isLinkActive('/admin/dashboard/debug') ? 'text-teal-500' : 'text-slate-400'
+                }`}></i>
+                Debug
+              </Link>
+              
+              <Link 
                 href="/admin/dashboard/settings/site" 
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                   isLinkActive('/admin/dashboard/settings') ? 'bg-teal-50 text-teal-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'

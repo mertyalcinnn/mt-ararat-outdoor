@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import SafeImage from '@/components/SafeImage';
 
 interface Activity {
   title: string;
@@ -34,18 +35,37 @@ export default function ActivitiesListPage() {
         setIsLoading(true);
         setError(null);
         
-        const response = await fetch('/api/admin/activities');
+        console.log('Aktivite verilerini almak için API isteği yapılıyor...');
+        const response = await fetch('/api/admin/activities', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          },
+          cache: 'no-store'
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);
         }
         
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.error('API yanıtı JSON olarak ayrıştırılamadı:', jsonError);
+          throw new Error('Sunucudan geçersiz yanıt alındı');
+        }
         
         // Validasyon kontrolü
         if (!Array.isArray(data)) {
           console.error('Aktiviteler dizisi değil:', data);
-          throw new Error('Sunucudan beklenmeyen veri formatı alındı');
+          
+          // Eğer veri bir dizi değilse, boş bir dizi kullan
+          console.log('Aktiviteler dizisi olmadığı için boş dizi kullanılıyor');
+          setActivities([]);
+          setIsLoading(false);
+          return;
         }
         
         setActivities(data);
@@ -54,6 +74,9 @@ export default function ActivitiesListPage() {
         console.error('Error fetching activities:', err);
         setError(err instanceof Error ? err.message : 'Veri yüklenirken bir hata oluştu');
         setIsLoading(false);
+        
+        // Hata durumunda boş dizi ile devam et
+        setActivities([]);
       }
     };
 
@@ -76,20 +99,64 @@ export default function ActivitiesListPage() {
     try {
       setIsDeleting(slug); // Silme işlemi başladı
       
-      const response = await fetch(`/api/admin/activities/${slug}`, {
-        method: 'DELETE',
+      console.log(`${slug} aktivitesini silmek için API isteği yapılıyor...`);
+      
+      // Doğrudan silme API'sini çağır (GET kontrolünü atla)
+      const response = await fetch(`/api/admin/activities/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          slug: slug // Silinecek aktivitenin slug'ını gönder
+        })
       });
       
+      // Başarısız silme işlemi durumunda
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Aktivite silinirken bir hata oluştu');
+        let errorMessage = `Aktivite silinemedi: HTTP ${response.status}`;
+        
+        // Response'u klonlayarak okuma işlemini güvenli hale getiriyoruz
+        const clonedResponse = response.clone();
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error('API yanıtı JSON olarak ayrıştırılamadı:', jsonError);
+          
+          try {
+            // Klonlanmış yanıtı text olarak okuyoruz
+            const textResponse = await clonedResponse.text();
+            console.error('Ham yanıt:', textResponse);
+          } catch (textError) {
+            console.error('Yanıt text olarak da okunamadı:', textError);
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       
-      // Başarıyla silindi, listeyi güncelle
-      setActivities(activities.filter(activity => activity.slug !== slug));
-      
-      // Kullanıcıya bildir
-      alert(`${slug} aktivitesi başarıyla silindi`);
+      // Başarılı silme işlemi
+      try {
+        const result = await response.json();
+        console.log('Silme işlemi yanıtı:', result);
+        
+        // Listeyi güncelle
+        setActivities(activities.filter(activity => activity.slug !== slug));
+        
+        // Kullanıcıya bildir
+        alert(`${slug} aktivitesi başarıyla silindi`);
+      } catch (jsonError) {
+        console.warn('Silme işlemi başarılı ancak JSON yanıtı alınamadı:', jsonError);
+        
+        // JSON yanıtı alamadık, ancak yanıt OK olduğundan başarılı kabul edelim
+        // Listeyi güncelle
+        setActivities(activities.filter(activity => activity.slug !== slug));
+        
+        // Kullanıcıya bildir
+        alert(`${slug} aktivitesi başarıyla silindi (yanıt ayrıştırılamadı)`);
+      }
       
     } catch (error) {
       console.error('Aktivite silinirken hata:', error);
@@ -188,14 +255,10 @@ export default function ActivitiesListPage() {
                         <div className="flex items-center">
                           {activity.coverImage && (
                             <div className="flex-shrink-0 h-10 w-10 mr-3">
-                              <img
-                                className="h-10 w-10 rounded-md object-cover"
+                              <SafeImage
                                 src={activity.coverImage}
                                 alt={activity.title}
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = "https://via.placeholder.com/150?text=Görsel+Yok";
-                                }}
+                                className="h-10 w-10 rounded-md object-cover"
                               />
                             </div>
                           )}
@@ -225,7 +288,7 @@ export default function ActivitiesListPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-3">
                           <Link 
-                            href={`/admin/dashboard/activities/${activity.slug}`}
+                            href={`/admin/dashboard/activities/edit/${activity.slug}`}
                             className="text-blue-600 hover:text-blue-900"
                             title="Düzenle"
                           >

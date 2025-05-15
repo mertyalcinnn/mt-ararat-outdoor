@@ -1,3 +1,6 @@
+// Bu bir Server Component olarak değiştirildi
+// "use client" etiketi kaldırıldı
+
 import { getDictionary } from "../../dictionaries";
 import { Locale } from "../../lib/i18n";
 import Hero from "../../components/Hero";
@@ -56,8 +59,41 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
       console.error('Müşteri yorumları yüklenemedi:', testimonialsError);
       // testimonials boş dizi olarak kalacak
     }
-    const dictionary = getDictionary(lang);
-    const { homepage } = dictionary;
+    const dictionary = getDictionary(lang) || {
+      homepage: {},
+      common: {
+        mountHeight: "",
+        yearsExperience: "",
+        happyAdventurers: "",
+        uniqueActivities: ""
+      },
+      navigation: {
+        home: "",
+        activities: "",
+        about: "",
+        contact: "",
+        reservation: ""
+      }
+    };
+    // dictionary içinden homepage'i çıkar ve eğer yoksa varsayılan değerleri kullan
+    const homepage = dictionary?.homepage || {
+      hero: { title: "", description: "" },
+      activities: { title: "", description: "" },
+      stats: { mountHeight: "", experience: "", clients: "", activities: "" },
+      whyUs: {
+        title: "",
+        professionalGuides: { title: "", description: "" },
+        safety: { title: "", description: "" },
+        uniqueLocations: { title: "", description: "" },
+        equipment: { title: "", description: "" },
+        moreInfo: "",
+        guidesLabel: "",
+        certifiedTeam: ""
+      },
+      testimonials: { title: "", description: "" },
+      instagram: { title: "", description: "", followUs: "" },
+      cta: { title: "", description: "", contact: "", explore: "" }
+    };
     
     // Instagram kullanıcı adı
     const instagramUsername = "likyaclimbing_olympos";
@@ -65,9 +101,11 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     return (
       <div>
         <Hero
-          title={homepage.hero.title}
-          description={homepage.hero.description}
-          image={homeData.heroImage}
+          title={homepage?.hero?.title || ""}
+          description={homepage?.hero?.description || ""}
+          image={homeData?.heroImage || "/images/hero-fallback.jpg"}
+          ctaExplore={homepage?.cta?.explore || ""}
+          ctaContact={homepage?.cta?.contact || ""}
         />
 
         {/* Aktiviteler Bölümü */}
@@ -97,10 +135,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                 </span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-                {homepage.activities.title}
+                {homepage?.activities?.title || ""}
               </h2>
               <p className="text-lg max-w-3xl mx-auto text-dark/70">
-                {homepage.activities.description}
+                {homepage?.activities?.description || ""}
               </p>
               
               {/* Renk ayraç */}
@@ -131,27 +169,27 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
-                  {dictionary.common.mountHeight}
+                  {dictionary?.common?.mountHeight || ""}
                 </span>
-                <p className="text-white/80">{homepage.stats.mountHeight}</p>
+                <p className="text-white/80">{homepage?.stats?.mountHeight || ""}</p>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
-                  {dictionary.common.yearsExperience}
+                  {dictionary?.common?.yearsExperience || ""}
                 </span>
-                <p className="text-white/80">{homepage.stats.experience}</p>
+                <p className="text-white/80">{homepage?.stats?.experience || ""}</p>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
-                  {dictionary.common.happyAdventurers}
+                  {dictionary?.common?.happyAdventurers || ""}
                 </span>
-                <p className="text-white/80">{homepage.stats.clients}</p>
+                <p className="text-white/80">{homepage?.stats?.clients || ""}</p>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
-                  {dictionary.common.uniqueActivities}
+                  {dictionary?.common?.uniqueActivities || ""}
                 </span>
-                <p className="text-white/80">{homepage.stats.activities}</p>
+                <p className="text-white/80">{homepage?.stats?.activities || ""}</p>
               </div>
             </div>
           </div>
@@ -163,7 +201,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="order-2 md:order-1">
                 <h2 className="text-3xl font-bold mb-6">
-                  {homepage.whyUs.title}
+                  {homepage?.whyUs?.title || ""}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="bg-light rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -183,10 +221,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                       </svg>
                     </div>
                     <h3 className="font-bold text-xl mb-2">
-                      {homepage.whyUs.professionalGuides.title}
+                      {homepage?.whyUs?.professionalGuides?.title || ""}
                     </h3>
                     <p className="text-dark/70">
-                      {homepage.whyUs.professionalGuides.description}
+                      {homepage?.whyUs?.professionalGuides?.description || ""}
                     </p>
                   </div>
 
@@ -206,10 +244,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                       </svg>
                     </div>
                     <h3 className="font-bold text-xl mb-2">
-                      {homepage.whyUs.safety.title}
+                      {homepage?.whyUs?.safety?.title || ""}
                     </h3>
                     <p className="text-dark/70">
-                      {homepage.whyUs.safety.description}
+                      {homepage?.whyUs?.safety?.description || ""}
                     </p>
                   </div>
 
@@ -230,10 +268,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                       </svg>
                     </div>
                     <h3 className="font-bold text-xl mb-2">
-                      {homepage.whyUs.uniqueLocations.title}
+                      {homepage?.whyUs?.uniqueLocations?.title || ""}
                     </h3>
                     <p className="text-dark/70">
-                      {homepage.whyUs.uniqueLocations.description}
+                      {homepage?.whyUs?.uniqueLocations?.description || ""}
                     </p>
                   </div>
 
@@ -255,16 +293,16 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                       </svg>
                     </div>
                     <h3 className="font-bold text-xl mb-2">
-                      {homepage.whyUs.equipment.title}
+                      {homepage?.whyUs?.equipment?.title || ""}
                     </h3>
                     <p className="text-dark/70">
-                      {homepage.whyUs.equipment.description}
+                      {homepage?.whyUs?.equipment?.description || ""}
                     </p>
                   </div>
                 </div>
                 <div className="mt-8">
                   <Link href={`/${lang}/about`} className="btn btn-primary">
-                    {homepage.whyUs.moreInfo}
+                    {homepage?.whyUs?.moreInfo || ""}
                   </Link>
                 </div>
               </div>
@@ -300,10 +338,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                       </div>
                       <div>
                         <p className="font-bold text-sm">
-                          {homepage.whyUs.guidesLabel}
+                          {homepage?.whyUs?.guidesLabel || ""}
                         </p>
                         <p className="text-xs text-dark/60">
-                          {homepage.whyUs.certifiedTeam}
+                          {homepage?.whyUs?.certifiedTeam || ""}
                         </p>
                       </div>
                     </div>
@@ -319,10 +357,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
           <div className="container-custom">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">
-                {homepage.testimonials.title}
+                {homepage?.testimonials?.title || ""}
               </h2>
               <p className="text-lg max-w-2xl mx-auto">
-                {homepage.testimonials.description}
+                {homepage?.testimonials?.description || ""}
               </p>
             </div>
 
@@ -384,9 +422,9 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
 
         {/* Instagram Beslemesi Bölümü */}
         <InstagramPromoBanner 
-          title={homepage.instagram.title}
-          description={homepage.instagram.description}
-          followText={homepage.instagram.followUs}
+          title={homepage?.instagram?.title || ""}
+          description={homepage?.instagram?.description || ""}
+          followText={homepage?.instagram?.followUs || ""}
           lang={lang}
           instagramUsername={instagramUsername}
         />

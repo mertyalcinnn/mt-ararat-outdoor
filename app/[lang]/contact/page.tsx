@@ -1,3 +1,6 @@
+// Using server component since we're fetching data
+// Remove "use client" directive
+
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import PageHeader from '../../../components/PageHeader';
