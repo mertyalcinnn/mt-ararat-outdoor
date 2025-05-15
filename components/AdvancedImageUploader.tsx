@@ -2,22 +2,25 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-import ImageWithFallback from './ImageWithFallback';
+import OptimizedImage from './OptimizedImage';
 
 // Görsel önizleme bileşeni
-const ImagePreview = ({ imageUrl, onError }) => {
+const ImagePreview = ({ imageUrl }) => {
   if (!imageUrl) return null;
   
   return (
     <div className="px-4 pt-4">
       <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-300 bg-slate-100">
-        <ImageWithFallback 
+        <OptimizedImage
           src={imageUrl}
-          alt="Seçilen Görsel" 
+          alt="Seçilen Görsel"
+          width={300}
+          height={200} 
           className="w-full h-full object-contain rounded-lg"
+          objectFit="contain"
         />
         
-        {/* Düzgün URL göster */}
+        {/* URL bilgisi göster */}
         <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
           {imageUrl}
         </div>

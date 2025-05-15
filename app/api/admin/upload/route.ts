@@ -10,20 +10,18 @@ function generateUniqueId() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
+import { NextRequest, NextResponse } from 'next/server';
+import { uploadImage } from '@/lib/image-service';
+
+// Benzersiz ID oluşturmak için yardımcı fonksiyon
+function generateUniqueId() {
+  // Zaman damgası ve rastgele sayı kullanarak benzersiz bir ID oluştur
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
-    
-    // Çalışma ortamı bilgisini logla
-    console.log('Çalışma ortamı:', {
-      NODE_ENV: process.env.NODE_ENV,
-      VERCEL: process.env.VERCEL === '1' ? 'Evet' : 'Hayır',
-      CLOUDINARY_CONFIG: {
-        CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? '✓ Mevcut' : '✗ Eksik',
-        API_KEY: process.env.CLOUDINARY_API_KEY ? '✓ Mevcut' : '✗ Eksik',
-        API_SECRET: process.env.CLOUDINARY_API_SECRET ? '✓ Mevcut' : '✗ Eksik',
-      }
-    });
     
     // formData'yı kontrollü şekilde al
     let formData;
@@ -68,111 +66,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vercel ortamında veya Cloudinary yapılandırılmışsa Cloudinary kullan
-    const useCloudinary = process.env.VERCEL === '1' || (
-      process.env.CLOUDINARY_CLOUD_NAME && 
-      process.env.CLOUDINARY_API_KEY && 
-      process.env.CLOUDINARY_API_SECRET
-    );
-    
-    console.log('Yükleme stratejisi:', useCloudinary ? 'Cloudinary' : 'Dosya Sistemi');
-    
-    if (useCloudinary) {
-      try {
-        // Cloudinary modülünü dinamik olarak yükle
-        const cloudinaryModule = await import('@/lib/cloudinary');
-        
-        // Cloudinary yapılandırmasını kontrol et
-        const isConfigValid = cloudinaryModule.verifyCloudinaryConfig();
-        if (!isConfigValid) {
-          throw new Error('Cloudinary yapılandırması eksik veya hatalı');
-        }
-        
-        // Dosyayı Cloudinary'ye yükle
-        console.log('Dosya Cloudinary\'ye yükleniyor...');
-        const uploadResult = await cloudinaryModule.uploadBuffer(buffer, 'activities');
-        
-        if (!uploadResult) {
-          throw new Error('Cloudinary yükleme sonucu boş, yükleme başarısız');
-        }
-        
-        console.log('Cloudinary yükleme başarılı:', uploadResult);
-        
-        return NextResponse.json({
-          success: true,
-          url: uploadResult,
-          fullUrl: uploadResult,
-          filename: uploadResult.split('/').pop(),
-          provider: 'cloudinary'
-        });
-      } catch (cloudinaryError) {
-        console.error('Cloudinary yükleme hatası (detaylı):', cloudinaryError);
-        
-        // Vercel'de çalışıyorsak hata fırlat, lokalde dosya sistemine düşebiliriz
-        if (process.env.VERCEL === '1') {
-          return NextResponse.json(
-            { 
-              error: 'Görsel yüklenirken hata oluştu',
-              details: cloudinaryError instanceof Error ? cloudinaryError.message : 'Bilinmeyen hata',
-              code: 'CLOUDINARY_ERROR'
-            },
-            { status: 500 }
-          );
-        }
-        
-        // Lokalde çalışıyorsak, dosya sistemine düşelim
-        console.log('Cloudinary hatası nedeniyle dosya sistemine düşülüyor...');
+    try {
+      // Görseli yükle - bu artık image-service ile yapılıyor
+      const imageUrl = await uploadImage(buffer, file.name);
+      
+      if (!imageUrl) {
+        throw new Error('Görsel yükleme başarısız');
       }
-    }
-    
-    // Buraya gelirsek, dosya sistemine yazıyoruz demektir
-    // Dosya uzantısını al
-    const originalFilename = file.name;
-    const fileExtension = path.extname(originalFilename).toLowerCase();
-    
-    // Yeni benzersiz bir dosya adı oluşturalım
-    const uniqueFilename = `${generateUniqueId()}${fileExtension}`;
-    
-    // Uploads dizinini kontrol et
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    try {
-      await fs.promises.access(uploadDir);
-    } catch (err) {
-      console.log('Uploads dizini oluşturuluyor...');
-      await mkdir(uploadDir, { recursive: true, mode: 0o755 });
-    }
-    
-    // Dosyayı kaydet
-    const filePath = path.join(uploadDir, uniqueFilename);
-    console.log('Dosya kaydediliyor:', filePath);
-    
-    try {
-      await writeFile(filePath, buffer);
-      console.log('Dosya başarıyla kaydedildi');
-    } catch (fileError) {
-      console.error('Dosya yazma hatası:', fileError);
+      
+      // URL oluştur
+      const host = request.headers.get('host') || 'localhost:3000';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      
+      const response = {
+        success: true,
+        url: imageUrl,
+        fullUrl: `${protocol}://${host}${imageUrl}`,
+        filename: imageUrl.split('/').pop(),
+        provider: 'vercel'
+      };
+      
+      console.log('Başarılı yanıt:', response);
+      return NextResponse.json(response);
+    } catch (uploadError) {
+      console.error('Görsel yükleme hatası:', uploadError);
       return NextResponse.json(
-        { error: 'Dosya kaydedilemedi', details: fileError instanceof Error ? fileError.message : 'Bilinmeyen hata' },
+        { 
+          error: 'Görsel yüklenemedi', 
+          details: uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata',
+          code: 'UPLOAD_ERROR'
+        },
         { status: 500 }
       );
     }
-    
-    // URL oluştur
-    const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const uploadPath = `/uploads/${uniqueFilename}`;
-    
-    const response = {
-      success: true,
-      url: uploadPath,
-      fullUrl: `${protocol}://${host}${uploadPath}`,
-      filename: uniqueFilename,
-      provider: 'filesystem'
-    };
-    
-    console.log('Başarılı yanıt:', response);
-    return NextResponse.json(response);
-    
   } catch (error) {
     console.error('Genel yükleme hatası:', error);
     return NextResponse.json({

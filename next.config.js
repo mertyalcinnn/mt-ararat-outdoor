@@ -2,8 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['via.placeholder.com'],
-    unoptimized: true, // Yerel görseller için optimize etmeyi devre dışı bırak
+    domains: ['via.placeholder.com', 'localhost', 'mt-ararat-outdoor.vercel.app'],
     remotePatterns: [
       {
         protocol: 'https',
