@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import fs from 'fs';
+import { uploadBuffer } from '@/lib/cloudinary';
 
 // Benzersiz ID oluşturmak için yardımcı fonksiyon
 function generateUniqueId() {
@@ -12,6 +13,75 @@ function generateUniqueId() {
 export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
+    
+    // Vercel ortamını kontrol et
+    const isVercel = process.env.VERCEL === '1';
+    console.log(`Çalışma ortamı: ${isVercel ? 'Vercel' : 'Lokal'}`);
+    
+    // Eğer Vercel ortamındaysak veya Cloudinary yapılandırması varsa Cloudinary'yi kullan
+    if (isVercel || (
+      process.env.CLOUDINARY_CLOUD_NAME && 
+      process.env.CLOUDINARY_API_KEY && 
+      process.env.CLOUDINARY_API_SECRET
+    )) {
+      console.log('Cloudinary ile görsel yükleme işlemi tercih edildi');
+      
+      // multipart form verilerini işleyelim
+      const formData = await request.formData();
+      console.log('FormData alındı, içerik anahtarları:', Array.from(formData.keys()));
+      
+      const file = formData.get('file') as File;
+
+      if (!file) {
+        console.error('Dosya bulunamadı');
+        return NextResponse.json(
+          { error: 'Dosya yüklenemedi - dosya bulunamadı' },
+          { status: 400 }
+        );
+      }
+
+      console.log('Dosya bilgileri:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)}KB`
+      });
+
+      // Dosya içeriğini bir buffer'a dönüştürelim
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Görsel türünü kontrol edelim (sadece jpeg, jpg, png, webp, gif)
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+      if (!allowedMimeTypes.includes(file.type)) {
+        console.error('Geçersiz dosya formatı:', file.type);
+        return NextResponse.json(
+          { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp, gif ve svg desteklenmektedir.' },
+          { status: 400 }
+        );
+      }
+      
+      // Cloudinary'ye yükle
+      try {
+        const result = await uploadBuffer(buffer, 'activities');
+        if (!result) {
+          throw new Error('Cloudinary yükleme sonucu boş');
+        }
+        
+        return NextResponse.json({
+          success: true,
+          url: result,
+          fullUrl: result,
+          filename: result.split('/').pop(),
+          provider: 'cloudinary'
+        });
+      } catch (cloudinaryError) {
+        console.error('Cloudinary yükleme hatası:', cloudinaryError);
+        throw cloudinaryError; // Hata ile devam et, lokalde deneyebilir
+      }
+    }
+    
+    // Lokalde çalışırken dosya sistemi kullan
+    console.log('Dosya sistemine yükleme işlemi başlatılıyor');
     
     // multipart form verilerini işleyelim
     const formData = await request.formData();
@@ -124,7 +194,8 @@ export async function POST(request: NextRequest) {
       success: true,
       url: uploadPath, // Daima /uploads/filename formatında olmalı
       fullUrl: `${protocol}://${host}${uploadPath}`,
-      filename: uniqueFilename
+      filename: uniqueFilename,
+      provider: 'filesystem'
     };
     
     console.log('Başarılı yanıt:', response);

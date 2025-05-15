@@ -177,6 +177,48 @@ export async function PUT(
     
     const activityData = await request.json();
     
+    // Vercel ortamında çalışan görsel işleme operasyonlarını ekle
+    try {
+      if (process.env.VERCEL) {
+        // Cloudinary entegrasyonunu kullan
+        console.log('Vercel ortamında Cloudinary için görsel işleme yapılıyor');
+        
+        const { migrateImageUrls } = await import('@/lib/cloudinary');
+        
+        // Kapak görseli ve galeri görsellerini işle
+        // coverImage'ı Cloudinary'ye yükle (eğer local bir dosya yoluysa)
+        if (activityData.coverImage && !activityData.coverImage.includes('cloudinary.com')) {
+          try {
+            console.log('Kapak görseli Cloudinary\'ye yükleniyor', activityData.coverImage.slice(0, 30) + '...');
+            
+            // Cloudinary'ye yükle
+            const { uploadImage } = await import('@/lib/cloudinary');
+            const cloudinaryUrl = await uploadImage(activityData.coverImage);
+            
+            if (cloudinaryUrl) {
+              console.log('Kapak görseli Cloudinary\'ye yüklendi:', cloudinaryUrl);
+              activityData.coverImage = cloudinaryUrl;
+            }
+          } catch (coverImageError) {
+            console.error('Kapak görseli yüklenirken hata:', coverImageError);
+          }
+        }
+        
+        // Galeri görsellerini Cloudinary'ye yükle
+        if (activityData.gallery && Array.isArray(activityData.gallery) && activityData.gallery.length > 0) {
+          try {
+            console.log('Galeri görselleri Cloudinary\'ye yükleniyor...');
+            activityData.gallery = await migrateImageUrls(activityData.gallery);
+          } catch (galleryError) {
+            console.error('Galeri görselleri yüklenirken hata:', galleryError);
+          }
+        }
+      }
+    } catch (imageProcessingError) {
+      console.error('Görsel işleme sırasında hata:', imageProcessingError);
+      // Hatayı yut ve işleme devam et, görseller yerel yollarda kalabilir
+    }
+    
     // Slug değiştirilmediyse doğrudan güncelle
     let finalSlug = slug;
     if (activityData.slug && activityData.slug !== slug) {

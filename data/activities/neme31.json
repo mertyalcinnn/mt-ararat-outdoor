@@ -1,0 +1,20 @@
+{
+  "title": "neme31",
+  "slug": "neme31",
+  "description": "asdasd",
+  "content": "# Aktivite Hakkında\n\nAktivitenin detaylı açıklaması buraya girilecek. Bu alan Markdown formatını destekler.\n\n## Detaylar\n\n- Madde 1\n- Madde 2\n- Madde 3\n\n## Rota\n\n1. Başlangıç noktası\n2. Ara nokta\n3. Bitiş noktası",
+  "coverImage": "http://localhost:3000/uploads/1747307858279-ma2yn1fdsdh.png",
+  "gallery": [],
+  "duration": "2",
+  "difficultyLevel": "Orta",
+  "includedServices": [
+    "Profesyonel rehberlik",
+    "Ekipman",
+    "Ulaşım"
+  ],
+  "contactWhatsapp": "",
+  "featured": false,
+  "createdAt": "2025-05-15T11:18:16.739Z",
+  "updatedAt": "2025-05-15T11:18:16.739Z",
+  "_id": "6825cd78837175a0b164470f"
+}

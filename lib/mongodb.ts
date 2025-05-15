@@ -5,12 +5,20 @@ let uri = '';
 try {
   uri = process.env.MONGODB_URI || '';
   if (!uri) {
+    // Vercel'de çalışırken MongoDB URI zorunlu
+    if (process.env.VERCEL) {
+      throw new Error('MONGODB_URI çevresel değişkeni Vercel ortamında zorunludur');
+    }
     console.warn('MONGODB_URI çevresel değişkeni ayarlanmadı, veritabanı işlemleri dosya sistem üzerinden yapılacak');
   } else {
     console.log('MongoDB URI bulundu, bağlantı kurulacak');
   }
 } catch (error) {
   console.error('MONGODB_URI erişiminde hata:', error);
+  // Vercel'de hata fırlatarak uygulamanın çökmesini sağla
+  if (process.env.VERCEL) {
+    throw error;
+  }
 }
 
 const options = {};
@@ -21,6 +29,11 @@ let clientPromise: Promise<MongoClient>;
 // Bağlantı başarısız olursa bile Promise döndüren fonksiyon
 function createClientPromise() {
   try {
+    // Vercel'de çalışırken MongoDB URI geçerli olmalı
+    if (process.env.VERCEL && (!uri || uri.includes('sunucu.mongodb.net'))) {
+      throw new Error('Vercel ortamında geçerli bir MONGODB_URI zorunludur');
+    }
+    
     if (!uri || uri.includes('sunucu.mongodb.net')) {
       console.warn('Geçerli bir MongoDB URI yok, dummy bir promise oluşturuluyor');
       client = new MongoClient('mongodb://localhost:27017', options);
@@ -29,11 +42,24 @@ function createClientPromise() {
     
     client = new MongoClient(uri, options);
     return client.connect().catch(err => {
-      console.error('MongoDB bağlantı hatası, dosya sistemi geri dönüşüne geçiliyor:', err);
+      console.error('MongoDB bağlantı hatası:', err);
+      
+      // Vercel'de çalışırken hata fırlat, dosya sistemi geri dönüşüne izin verme
+      if (process.env.VERCEL) {
+        throw err;
+      }
+      
+      console.warn('Dosya sistemi geri dönüşüne geçiliyor');
       return client;
     });
   } catch (error) {
     console.error('MongoDB client oluşturulurken hata:', error);
+    
+    // Vercel'de çalışırken hata fırlat
+    if (process.env.VERCEL) {
+      throw error;
+    }
+    
     client = new MongoClient('mongodb://localhost:27017', options);
     return Promise.resolve(client);
   }
@@ -64,6 +90,11 @@ if (process.env.NODE_ENV === 'development') {
 // Helper function to get database instance
 export async function getDb(): Promise<Db | null> {
   try {
+    // Vercel'de çalışırken MongoDB URI zorunlu
+    if (process.env.VERCEL && (!uri || uri.includes('sunucu.mongodb.net'))) {
+      throw new Error('Vercel ortamında geçerli bir MONGODB_URI zorunludur');
+    }
+    
     if (!uri || uri.includes('sunucu.mongodb.net')) {
       console.warn('Geçerli bir MongoDB URI yok, null döndürülüyor');
       return null;
@@ -71,14 +102,28 @@ export async function getDb(): Promise<Db | null> {
     
     const client = await clientPromise.catch(err => {
       console.error('MongoDB client alınamadı:', err);
+      // Vercel'de çalışırken hata fırlat
+      if (process.env.VERCEL) {
+        throw err;
+      }
       return null;
     });
     
-    if (!client) return null;
+    if (!client) {
+      // Vercel'de client yoksa hata fırlat
+      if (process.env.VERCEL) {
+        throw new Error('MongoDB client başlatılamadı');
+      }
+      return null;
+    }
     
     return client.db(process.env.MONGODB_DB || 'mt-ararat-outdoor');
   } catch (error) {
     console.error('MongoDB veritabanı bağlantısı kurulamadı:', error);
+    // Vercel'de hata fırlat
+    if (process.env.VERCEL) {
+      throw error;
+    }
     return null;
   }
 }
