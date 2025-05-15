@@ -222,24 +222,16 @@ export default function AdvancedImageUploader({
       // URL'yi parent component'e bildir
       if (data.fullUrl) {
         // API tam URL döndürüyorsa, onu kullan (Next.js 13+ için daha güvenli)
-        let fixedUrl = fixImagePath(data.fullUrl);
-        // URL'de hala dil kodu varsa temizle
-        if (fixedUrl.match(/\/[a-z]{2}\/uploads\//i)) {
-          fixedUrl = fixedUrl.replace(/\/([a-z]{2})\/uploads\//i, '/uploads/');
-        }
-        console.log('Tam URL kullanılıyor:', fixedUrl);
-        onImageSelect(fixedUrl);
-        setPreviewUrl(fixedUrl);
+        const imageUrl = data.fullUrl;
+        console.log('Tam URL kullanılıyor:', imageUrl);
+        onImageSelect(imageUrl);
+        setPreviewUrl(imageUrl);
       } else if (data.url) {
-        // Göreli URL'yi düzelt
-        let fixedUrl = fixImagePath(data.url);
-        // URL'de hala dil kodu varsa temizle
-        if (fixedUrl.match(/\/[a-z]{2}\/uploads\//i)) {
-          fixedUrl = fixedUrl.replace(/\/([a-z]{2})\/uploads\//i, '/uploads/');
-        }
-        console.log('Göreli URL düzeltildi:', fixedUrl);
-        onImageSelect(fixedUrl);
-        setPreviewUrl(fixedUrl);
+        // Göreli URL'yi kullan
+        const imageUrl = data.url;
+        console.log('Göreli URL kullanılıyor:', imageUrl);
+        onImageSelect(imageUrl);
+        setPreviewUrl(imageUrl);
       } else {
         throw new Error('Sunucu geçerli bir URL döndürmedi');
       }
@@ -327,9 +319,8 @@ export default function AdvancedImageUploader({
 
   // Galeriden resim seçme
   const handleGallerySelect = (image: MediaItem) => {
-    const fixedUrl = fixImagePath(image.url);
-    onImageSelect(fixedUrl);
-    setPreviewUrl(fixedUrl);
+    onImageSelect(image.url);
+    setPreviewUrl(image.url);
   };
 
   // Dosya seçme dialog'unu aç
@@ -408,7 +399,7 @@ export default function AdvancedImageUploader({
       </div>
       
       {/* Önizleme Alanı */}
-      {previewUrl && <ImagePreview imageUrl={previewUrl} onError={handleImageError} />}
+      {previewUrl && <ImagePreview imageUrl={previewUrl} />}
       
       {/* Tab İçerikleri */}
       <div className="p-4">
