@@ -24,8 +24,14 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
   const [activity, setActivity] = useState<Activity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isProductionEnvironment, setIsProductionEnvironment] = useState(false);
   
   useEffect(() => {
+    // Üretim ortamını kontrol et
+    if (window.location.hostname !== 'localhost') {
+      setIsProductionEnvironment(true);
+    }
+    
     // Aktivite verilerini yükleyin
     fetch(`/api/admin/activities/${slug}`)
       .then(res => res.json())
@@ -153,6 +159,13 @@ export default function EditActivityPage({ params }: { params: { slug: string } 
           Geri Dön
         </button>
       </div>
+      
+      {isProductionEnvironment && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 mb-6 rounded relative">
+          <strong className="font-bold">Uyarı: </strong>
+          <span className="block sm:inline">Üretim ortamında resim yükleme devre dışı bırakılmıştır. Resimleri geliştirme ortamında yükleyip sonra projeyi deploy etmeniz gerekir.</span>
+        </div>
+      )}
       
       <div className="bg-white rounded-lg shadow p-6">
         <form onSubmit={handleSubmit} className="space-y-6">

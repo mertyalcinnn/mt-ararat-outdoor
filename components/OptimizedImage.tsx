@@ -31,6 +31,12 @@ export default function OptimizedImage({
   const fixImageSrc = (url: string): string => {
     if (!url) return '/images/placeholder.jpg';
     
+    // localhost referanslarını temizle
+    if (url.includes('localhost')) {
+      // http://localhost:3000/uploads/image.jpg -> /uploads/image.jpg
+      return url.replace(/^https?:\/\/localhost:[0-9]+/, '');
+    }
+    
     // Mutlak URL kontrolü
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;

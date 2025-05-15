@@ -21,7 +21,8 @@
     "fix-api-metadata": "node fix-api-and-metadata.js",
     "fix-server-exports": "node fix-server-exports.js",
     "fix-all": "npm run fix-build && npm run fix-components && npm run fix-functions && npm run fix-static-params && npm run fix-api-metadata && npm run fix-server-exports",
-    "fix-and-rebuild": "bash fix-and-rebuild.sh"
+    "fix-and-rebuild": "bash fix-and-rebuild.sh",
+    "fix-image-urls": "node scripts/fix-image-urls.js"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.10",

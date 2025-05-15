@@ -3,6 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import fs from 'fs';
 import { uploadImage } from '@/lib/image-service';
+import { isVercelProduction } from '@/lib/environment';
 
 // Benzersiz ID oluşturmak için yardımcı fonksiyon
 function generateUniqueId() {
@@ -13,6 +14,16 @@ function generateUniqueId() {
 export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
+    
+    // Vercel üretim ortamında dosya yükleme işlemini devre dışı bırak
+    if (isVercelProduction()) {
+      console.log('Vercel üretim ortamında dosya yükleme devre dışı');
+      return NextResponse.json({
+        error: 'Üretim ortamında görsel yükleme devre dışı bırakılmıştır.',
+        details: 'Üretim ortamında dosya sistemi salt-okunurdur. Lütfen görselleri geliştirme ortamında yükleyin ve sonra projeyi deploy edin.',
+        code: 'PRODUCTION_UPLOAD_DISABLED'
+      }, { status: 403 });
+    }
     
     // formData'yı kontrollü şekilde al
     let formData;
@@ -69,12 +80,13 @@ export async function POST(request: NextRequest) {
       const host = request.headers.get('host') || 'localhost:3000';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       
+      // NOT: Göreceli URL döndür, tam URL değil - bu canlı ortamda sorun yaratmasın
       const response = {
         success: true,
-        url: imageUrl,
-        fullUrl: `${protocol}://${host}${imageUrl}`,
+        url: imageUrl, // Göreceli URL, örneğin /uploads/image.jpg
+        fullUrl: imageUrl.startsWith('http') ? imageUrl : `${protocol}://${host}${imageUrl}`,
         filename: imageUrl.split('/').pop(),
-        provider: 'vercel'
+        provider: 'filesystem'
       };
       
       console.log('Başarılı yanıt:', response);
