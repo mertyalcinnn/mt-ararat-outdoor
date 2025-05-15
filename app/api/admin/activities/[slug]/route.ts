@@ -225,7 +225,7 @@ export async function PUT(
       let dbResult = false;
       try {
         console.log('Yeni aktivite MongoDB\'ye kaydediliyor...');
-        const insertResult = await updateOne('activities', { slug: finalSlug }, newActivity, { upsert: true });
+        const insertResult = await updateOne('activities', { slug: finalSlug }, newActivity, true);
         dbResult = !!insertResult;
         console.log('MongoDB kayıt sonucu:', insertResult);
       } catch (dbError) {
