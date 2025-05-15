@@ -227,6 +227,10 @@ export default function AdvancedImageUploader({
       const response = await fetch("/api/admin/upload", {
         method: "POST",
         body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
       });
 
       // HTTP durum kodunu kontrol et
