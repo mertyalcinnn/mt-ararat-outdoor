@@ -2,15 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import fs from 'fs';
-import { uploadBuffer } from '@/lib/cloudinary';
-
-// Benzersiz ID oluşturmak için yardımcı fonksiyon
-function generateUniqueId() {
-  // Zaman damgası ve rastgele sayı kullanarak benzersiz bir ID oluştur
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-}
-
-import { NextRequest, NextResponse } from 'next/server';
 import { uploadImage } from '@/lib/image-service';
 
 // Benzersiz ID oluşturmak için yardımcı fonksiyon
