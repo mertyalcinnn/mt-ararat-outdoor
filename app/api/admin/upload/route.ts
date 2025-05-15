@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json({ error: 'Dosya bulunamadı' }, { status: 400 });
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
       url: result.secure_url,
     });
   } catch (error) {
-    console.error('Upload error:', error);
     return NextResponse.json(
       { error: 'Upload failed' },
       { status: 500 }
