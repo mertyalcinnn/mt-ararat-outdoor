@@ -2,7 +2,19 @@
 
 import { useState } from 'react';
 
-export default function ImageWithFallback({ src, alt, className, ...props }) {
+interface ImageWithFallbackProps {
+  src: string;
+  alt?: string;
+  className?: string;
+  [key: string]: any; // Diğer tüm olası props'lar için
+}
+
+export default function ImageWithFallback({ 
+  src, 
+  alt = "Görsel", 
+  className = "", 
+  ...props 
+}: ImageWithFallbackProps) {
   const [error, setError] = useState(false);
   const [srcUrl, setSrcUrl] = useState(src);
 
@@ -53,7 +65,7 @@ export default function ImageWithFallback({ src, alt, className, ...props }) {
   return (
     <img
       src={srcUrl || '/images/placeholder.jpg'}
-      alt={alt || "Görsel"}
+      alt={alt}
       className={className}
       onError={handleError}
       {...props}
