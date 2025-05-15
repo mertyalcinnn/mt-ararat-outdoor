@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         'activities', 
         { slug: finalSlug }, 
         updatedActivity,
-        { upsert: true } // Yoksa oluştur
+        true // Yoksa oluştur
       );
       dbResult = !!mongoResult;
       console.log(`MongoDB kayıt/güncelleme sonucu:`, mongoResult);
