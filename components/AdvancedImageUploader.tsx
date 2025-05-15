@@ -2,32 +2,28 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-// Yardımcı fonksiyonlar
-const fixImagePath = (url: string): string => {
-  if (!url) return '';
+import ImageWithFallback from './ImageWithFallback';
+
+// Görsel önizleme bileşeni
+const ImagePreview = ({ imageUrl, onError }) => {
+  if (!imageUrl) return null;
   
-  // URL zaten tam ise (http:// veya https:// ile başlıyorsa) aynen kullan
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  
-  // URL göreli ise (/ ile başlıyorsa) tam URL oluştur
-  if (url.startsWith('/')) {
-    // Eğer tarayıcı ortamında değilse (SSR sırasında), boş döndür
-    if (typeof window === 'undefined') return url;
-    
-    // Dil kodunu (TR, EN vb.) URL'den çıkar
-    // Örnek: /tr/uploads/image.jpg → /uploads/image.jpg
-    if (url.match(/^\/[a-z]{2}\/uploads\//i)) {
-      url = url.replace(/^\/[a-z]{2}(\/uploads\/.*)$/i, '$1');
-      console.log('Dil kodu çıkarıldı, yeni URL:', url);
-    }
-    
-    return `${window.location.origin}${url}`;
-  }
-  
-  // URL belirsiz bir formatta ise, olduğu gibi döndür
-  return url;
+  return (
+    <div className="px-4 pt-4">
+      <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-300 bg-slate-100">
+        <ImageWithFallback 
+          src={imageUrl}
+          alt="Seçilen Görsel" 
+          className="w-full h-full object-contain rounded-lg"
+        />
+        
+        {/* Düzgün URL göster */}
+        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
+          {imageUrl}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 type MediaItem = {
@@ -338,82 +334,22 @@ export default function AdvancedImageUploader({
     fileInputRef.current?.click();
   };
 
-  // Görüntü hata yakalama işleyicisi
+  // Görsel hata yakalama işleyicisi
   const handleImageError = () => {
     console.error('Görüntü yükleme hatası:', previewUrl);
     
-    // URL'nin dil kodu içerip içermediğini kontrol et
-    if (previewUrl && previewUrl.match(/\/[a-z]{2}\/uploads\//i)) {
-      // Dil kodunu (TR, EN vb.) URL'den çıkar
-      const fixedUrl = previewUrl.replace(/\/([a-z]{2})\/uploads\//i, '/uploads/');
-      console.log('URL\'den dil kodu çıkarıldı, yeni URL:', fixedUrl);
-      
-      // Yeni URL'yi dene
-      setPreviewUrl(fixedUrl);
-      onImageSelect(fixedUrl);
-      return; // Düzelttikten sonra fonksiyondan çık
-    }
-    
-    // Tam URL ile başlayan bir URL mi kontrol et
-    if (previewUrl.startsWith('http://') || previewUrl.startsWith('https://')) {
-      // URL'yi parçalara ayır
-      try {
-        const url = new URL(previewUrl);
-        // Sadece path kısmını al ve dil kodunu kaldır
-        let path = url.pathname;
-        if (path.match(/^\/[a-z]{2}\/uploads\//i)) {
-          path = path.replace(/^\/[a-z]{2}(\/uploads\/.*)$/i, '$1');
-          const fixedUrl = `${url.origin}${path}`;
-          console.log('Tam URL\'den dil kodu çıkarıldı, yeni URL:', fixedUrl);
-          setPreviewUrl(fixedUrl);
-          onImageSelect(fixedUrl);
-          return;
-        }
-      } catch (urlError) {
-        console.error('URL ayrıştırma hatası:', urlError);
-      }
-    }
-    
-    // Diğer düzeltme yöntemleri
-    // URL'nin başında "/" olup olmadığını kontrol et
-    if (previewUrl.startsWith('/')) {
-      if (!previewUrl.startsWith('/uploads/')) {
-        // Eğer /uploads/ ile başlamıyorsa, başına ekleyelim
-        const fixedUrl = `/uploads/${previewUrl.startsWith('/') ? previewUrl.slice(1) : previewUrl}`;
-        console.log('URL /uploads/ ile başlatıldı:', fixedUrl);
-        
-        const fullUrl = `${window.location.origin}${fixedUrl}`;
-        setPreviewUrl(fullUrl);
-        onImageSelect(fullUrl);
-        return;
-      }
-      
-      // Göreli URL'yi tam URL'ye çevirelim
-      const fullUrl = `${window.location.origin}${previewUrl}`;
-      console.log('Göreli URL tam URL\'ye çevrildi:', fullUrl);
-      setPreviewUrl(fullUrl);
-      onImageSelect(fullUrl);
-      return;
-    }
-    
     // Hata mesajı göster
-    setError(`Görüntü yüklenemedi: ${previewUrl}. Görsel yolu doğru mu? Dosya mevcut mu?`);
+    setError(`Görüntü yüklenemedi: ${previewUrl}. Bu sorun, yükleme işlemi sırasında oluşmuş olabilir.`);
     
-    // Görseli temizle
-    setTimeout(() => {
-      // Eğer parent component'e bir seçim iletmişsek, onu da temizlemek amaçlı
-      if (previewUrl && previewUrl !== currentImageUrl) {
-        setPreviewUrl('');
-        onImageSelect('');
-      } else {
-        // Mevcut bir görsel varsa onu koruyalım
-        if (currentImageUrl) {
-          setPreviewUrl(currentImageUrl);
-        } else {
-          setPreviewUrl('');
-        }
-      }
-    }, 500);
+    // Görseli temizleme işlemi
+    if (previewUrl && previewUrl !== currentImageUrl) {
+      setPreviewUrl('');
+      // onImageSelect('');  // Bunu kapatıyoruz çünkü kullanıcı formunu boşaltır
+    } else if (currentImageUrl) {
+      setPreviewUrl(currentImageUrl); // Mevcut bir görsel varsa koru
+    } else {
+      setPreviewUrl('');
+    }
   };
 
   // Client tarafında render edilene kadar bekle
@@ -469,24 +405,7 @@ export default function AdvancedImageUploader({
       </div>
       
       {/* Önizleme Alanı */}
-      {previewUrl && (
-        <div className="px-4 pt-4">
-          <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-300 bg-slate-100">
-            {/* Güvenli görüntü komponenti ile sarmalayalım */}
-            <img 
-              src={fixImagePath(previewUrl)}
-              alt="Seçilen Görsel" 
-              onError={handleImageError}
-              className="w-full h-full object-contain rounded-lg"
-            />
-            
-            {/* Düzgün URL göster */}
-            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
-              {fixImagePath(previewUrl)}
-            </div>
-          </div>
-        </div>
-      )}
+      {previewUrl && <ImagePreview imageUrl={previewUrl} onError={handleImageError} />}
       
       {/* Tab İçerikleri */}
       <div className="p-4">

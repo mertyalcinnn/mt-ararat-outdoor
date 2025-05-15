@@ -14,79 +14,29 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
     
-    // Vercel ortamını kontrol et
-    const isVercel = process.env.VERCEL === '1';
-    console.log(`Çalışma ortamı: ${isVercel ? 'Vercel' : 'Lokal'}`);
+    // Çalışma ortamı bilgisini logla
+    console.log('Çalışma ortamı:', {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: process.env.VERCEL === '1' ? 'Evet' : 'Hayır',
+      CLOUDINARY_CONFIG: {
+        CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? '✓ Mevcut' : '✗ Eksik',
+        API_KEY: process.env.CLOUDINARY_API_KEY ? '✓ Mevcut' : '✗ Eksik',
+        API_SECRET: process.env.CLOUDINARY_API_SECRET ? '✓ Mevcut' : '✗ Eksik',
+      }
+    });
     
-    // Eğer Vercel ortamındaysak veya Cloudinary yapılandırması varsa Cloudinary'yi kullan
-    if (isVercel || (
-      process.env.CLOUDINARY_CLOUD_NAME && 
-      process.env.CLOUDINARY_API_KEY && 
-      process.env.CLOUDINARY_API_SECRET
-    )) {
-      console.log('Cloudinary ile görsel yükleme işlemi tercih edildi');
-      
-      // multipart form verilerini işleyelim
-      const formData = await request.formData();
+    // formData'yı kontrollü şekilde al
+    let formData;
+    try {
+      formData = await request.formData();
       console.log('FormData alındı, içerik anahtarları:', Array.from(formData.keys()));
-      
-      const file = formData.get('file') as File;
-
-      if (!file) {
-        console.error('Dosya bulunamadı');
-        return NextResponse.json(
-          { error: 'Dosya yüklenemedi - dosya bulunamadı' },
-          { status: 400 }
-        );
-      }
-
-      console.log('Dosya bilgileri:', {
-        name: file.name,
-        type: file.type,
-        size: `${(file.size / 1024).toFixed(2)}KB`
-      });
-
-      // Dosya içeriğini bir buffer'a dönüştürelim
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      // Görsel türünü kontrol edelim (sadece jpeg, jpg, png, webp, gif)
-      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-      if (!allowedMimeTypes.includes(file.type)) {
-        console.error('Geçersiz dosya formatı:', file.type);
-        return NextResponse.json(
-          { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp, gif ve svg desteklenmektedir.' },
-          { status: 400 }
-        );
-      }
-      
-      // Cloudinary'ye yükle
-      try {
-        const result = await uploadBuffer(buffer, 'activities');
-        if (!result) {
-          throw new Error('Cloudinary yükleme sonucu boş');
-        }
-        
-        return NextResponse.json({
-          success: true,
-          url: result,
-          fullUrl: result,
-          filename: result.split('/').pop(),
-          provider: 'cloudinary'
-        });
-      } catch (cloudinaryError) {
-        console.error('Cloudinary yükleme hatası:', cloudinaryError);
-        throw cloudinaryError; // Hata ile devam et, lokalde deneyebilir
-      }
+    } catch (formError) {
+      console.error('FormData işlenirken hata:', formError);
+      return NextResponse.json(
+        { error: 'Dosya verisi işlenemedi', details: formError instanceof Error ? formError.message : 'FormData hatası' },
+        { status: 400 }
+      );
     }
-    
-    // Lokalde çalışırken dosya sistemi kullan
-    console.log('Dosya sistemine yükleme işlemi başlatılıyor');
-    
-    // multipart form verilerini işleyelim
-    const formData = await request.formData();
-    // Spread operatörü yerine Array.from kullanarak FormData anahtarlarını al
-    console.log('FormData alındı, içerik anahtarları:', Array.from(formData.keys()));
     
     const file = formData.get('file') as File;
 
@@ -107,92 +57,114 @@ export async function POST(request: NextRequest) {
     // Dosya içeriğini bir buffer'a dönüştürelim
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Dosya uzantısını alalım
-    const originalFilename = file.name;
-    const fileExtension = path.extname(originalFilename).toLowerCase();
     
-    // Yeni benzersiz bir dosya adı oluşturalım
-    const uniqueFilename = `${generateUniqueId()}${fileExtension}`;
-    
-    // Görsel türünü kontrol edelim (sadece jpeg, jpg, png, webp, gif)
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
-    if (!allowedExtensions.includes(fileExtension)) {
-      console.error('Geçersiz dosya formatı:', fileExtension);
+    // Görsel türünü kontrol et
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!allowedMimeTypes.includes(file.type)) {
+      console.error('Geçersiz dosya formatı:', file.type);
       return NextResponse.json(
         { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp, gif ve svg desteklenmektedir.' },
         { status: 400 }
       );
     }
 
-    // Dosyayı public/uploads klasörüne kaydedelim
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    // Vercel ortamında veya Cloudinary yapılandırılmışsa Cloudinary kullan
+    const useCloudinary = process.env.VERCEL === '1' || (
+      process.env.CLOUDINARY_CLOUD_NAME && 
+      process.env.CLOUDINARY_API_KEY && 
+      process.env.CLOUDINARY_API_SECRET
+    );
     
-    // Uploads klasörü var mı kontrol edelim, yoksa oluşturalım
-    try {
-      // Dizin varlığını kontrol et
-      console.log('Uploads dizini kontrol ediliyor:', uploadDir);
-      
+    console.log('Yükleme stratejisi:', useCloudinary ? 'Cloudinary' : 'Dosya Sistemi');
+    
+    if (useCloudinary) {
       try {
-        await fs.promises.access(uploadDir);
-        console.log('Uploads dizini mevcut');
-      } catch (accessError) {
-        console.log('Uploads dizini mevcut değil, oluşturuluyor...');
-        // Dizini oluştur (recursive: true ile üst dizinler de oluşturulur)
-        await mkdir(uploadDir, { recursive: true, mode: 0o755 });
-        console.log('Uploads dizini oluşturuldu');
+        // Cloudinary modülünü dinamik olarak yükle
+        const cloudinaryModule = await import('@/lib/cloudinary');
+        
+        // Cloudinary yapılandırmasını kontrol et
+        const isConfigValid = cloudinaryModule.verifyCloudinaryConfig();
+        if (!isConfigValid) {
+          throw new Error('Cloudinary yapılandırması eksik veya hatalı');
+        }
+        
+        // Dosyayı Cloudinary'ye yükle
+        console.log('Dosya Cloudinary\'ye yükleniyor...');
+        const uploadResult = await cloudinaryModule.uploadBuffer(buffer, 'activities');
+        
+        if (!uploadResult) {
+          throw new Error('Cloudinary yükleme sonucu boş, yükleme başarısız');
+        }
+        
+        console.log('Cloudinary yükleme başarılı:', uploadResult);
+        
+        return NextResponse.json({
+          success: true,
+          url: uploadResult,
+          fullUrl: uploadResult,
+          filename: uploadResult.split('/').pop(),
+          provider: 'cloudinary'
+        });
+      } catch (cloudinaryError) {
+        console.error('Cloudinary yükleme hatası (detaylı):', cloudinaryError);
+        
+        // Vercel'de çalışıyorsak hata fırlat, lokalde dosya sistemine düşebiliriz
+        if (process.env.VERCEL === '1') {
+          return NextResponse.json(
+            { 
+              error: 'Görsel yüklenirken hata oluştu',
+              details: cloudinaryError instanceof Error ? cloudinaryError.message : 'Bilinmeyen hata',
+              code: 'CLOUDINARY_ERROR'
+            },
+            { status: 500 }
+          );
+        }
+        
+        // Lokalde çalışıyorsak, dosya sistemine düşelim
+        console.log('Cloudinary hatası nedeniyle dosya sistemine düşülüyor...');
       }
-      
-      // Test dosyası yazarak yetkileri kontrol et
-      const testFile = path.join(uploadDir, 'test_permissions.txt');
-      await writeFile(testFile, 'test');
-      await fs.promises.unlink(testFile);
-      console.log('Yazma yetkileri OK');
-    } catch (mkdirError) {
-      console.error('Dizin oluşturma veya yazma hatası:', mkdirError);
-      return NextResponse.json(
-        { error: 'Uploads dizini oluşturulamadı veya yazılabilir değil', details: mkdirError instanceof Error ? mkdirError.message : 'Bilinmeyen hata' },
-        { status: 500 }
-      );
     }
     
-    const filePath = path.join(uploadDir, uniqueFilename);
+    // Buraya gelirsek, dosya sistemine yazıyoruz demektir
+    // Dosya uzantısını al
+    const originalFilename = file.name;
+    const fileExtension = path.extname(originalFilename).toLowerCase();
     
-    // Debug bilgisi
-    console.log('Görsel kaydediliyor:', filePath);
+    // Yeni benzersiz bir dosya adı oluşturalım
+    const uniqueFilename = `${generateUniqueId()}${fileExtension}`;
+    
+    // Uploads dizinini kontrol et
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    try {
+      await fs.promises.access(uploadDir);
+    } catch (err) {
+      console.log('Uploads dizini oluşturuluyor...');
+      await mkdir(uploadDir, { recursive: true, mode: 0o755 });
+    }
+    
+    // Dosyayı kaydet
+    const filePath = path.join(uploadDir, uniqueFilename);
+    console.log('Dosya kaydediliyor:', filePath);
     
     try {
       await writeFile(filePath, buffer);
-      console.log('Görsel başarıyla kaydedildi');
+      console.log('Dosya başarıyla kaydedildi');
     } catch (fileError) {
-      console.error('Görsel yazma hatası:', fileError);
+      console.error('Dosya yazma hatası:', fileError);
       return NextResponse.json(
-        { error: `Dosya kaydedilemedi: ${fileError instanceof Error ? fileError.message : 'Bilinmeyen hata'}` },
+        { error: 'Dosya kaydedilemedi', details: fileError instanceof Error ? fileError.message : 'Bilinmeyen hata' },
         { status: 500 }
       );
     }
     
-    // Dosyanın var olduğundan emin olalım
-    try {
-      await fs.promises.access(filePath);
-      console.log('Kaydedilen dosyaya erişim OK');
-    } catch (accessError) {
-      console.error('Kaydedilen dosya bulunamadı:', accessError);
-      return NextResponse.json(
-        { error: 'Dosya kaydedildi fakat erişilemedi. Lütfen tekrar deneyin.' },
-        { status: 500 }
-      );
-    }
-    
-    // Frontend'e dosya URL'sini dönelim (hostname ile tam URL oluştur)
+    // URL oluştur
     const host = request.headers.get('host') || 'localhost:3000';
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const uploadPath = `/uploads/${uniqueFilename}`;
     
-    // NOT: URL'de asla dil kodu olmamalı (örn. /tr/uploads/... yerine /uploads/...)
     const response = {
       success: true,
-      url: uploadPath, // Daima /uploads/filename formatında olmalı
+      url: uploadPath,
       fullUrl: `${protocol}://${host}${uploadPath}`,
       filename: uniqueFilename,
       provider: 'filesystem'
@@ -202,15 +174,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
     
   } catch (error) {
-    console.error('Detaylı hata:', error);
-    const errorMessage = error instanceof Error 
-      ? `${error.name}: ${error.message}` 
-      : String(error);
-      
+    console.error('Genel yükleme hatası:', error);
     return NextResponse.json({
       error: 'Dosya yüklenemedi',
-      details: errorMessage,
-      // Stack bilgisi geliştirme ortamında yardımcı olabilir
+      details: error instanceof Error ? error.message : String(error),
       stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }

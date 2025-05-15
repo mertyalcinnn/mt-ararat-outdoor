@@ -8,10 +8,30 @@ import { v2 as cloudinary } from 'cloudinary';
 
 // Cloudinary yapılandırması
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+  api_key: process.env.CLOUDINARY_API_KEY || '',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
 });
+
+// Cloudinary doğrulaması
+export function verifyCloudinaryConfig() {
+  const config = {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  };
+  
+  const isValid = config.cloud_name && config.api_key && config.api_secret;
+  
+  console.log('Cloudinary yapılandırması:', {
+    cloud_name: config.cloud_name ? '✓ Ayarlanmış' : '✗ Eksik',
+    api_key: config.api_key ? '✓ Ayarlanmış' : '✗ Eksik',
+    api_secret: config.api_secret ? '✓ Ayarlanmış' : '✗ Eksik',
+    isValid
+  });
+  
+  return isValid;
+}
 
 // Base64 formatındaki görseli yükle
 export async function uploadBase64Image(
@@ -96,27 +116,77 @@ export async function uploadBuffer(
   buffer: Buffer,
   folderName: string = 'activities'
 ): Promise<string | null> {
+  if (!verifyCloudinaryConfig()) {
+    console.error('Cloudinary yapılandırması eksik. Yükleme gerçekleştirilemiyor.');
+    return null;
+  }
+
   try {
-    const result = await new Promise<any>((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
+    // Hata ayıklama için stream kullanımını kontrol et
+    if (!buffer || !Buffer.isBuffer(buffer)) {
+      console.error('Geçersiz buffer:', buffer);
+      return null;
+    }
+    
+    // Buffer boyutunu kontrol et
+    console.log(`Buffer boyutu: ${buffer.length} bytes`);
+    
+    // Promise'ı daha iyi izlemek için
+    console.log('Cloudinary yükleme başlatılıyor...');
+    
+    const uploadPromise = new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: folderName,
           resource_type: 'image',
         },
         (error, result) => {
           if (error) {
-            console.error('Cloudinary buffer yükleme hatası:', error);
+            console.error('Cloudinary yükleme callback hatası:', error);
             reject(error);
           } else {
+            if (!result) {
+              console.error('Cloudinary başarılı döndü ama sonuç yok!');
+              reject(new Error('Cloudinary sonuç nesnesi boş'));
+              return;
+            }
+            console.log('Cloudinary yükleme başarılı:', result.secure_url);
             resolve(result);
           }
         }
-      ).end(buffer);
+      );
+      
+      // Stream hata işleyicisi
+      uploadStream.on('error', (err) => {
+        console.error('Cloudinary upload stream hatası:', err);
+        reject(err);
+      });
+      
+      // Buffer'ı stream'e yaz
+      try {
+        uploadStream.end(buffer);
+        console.log('Buffer stream\'e yazıldı');
+      } catch (writeError) {
+        console.error('Buffer stream\'e yazılırken hata:', writeError);
+        reject(writeError);
+      }
     });
+    
+    // Promise'ı çalıştır
+    const result = await uploadPromise;
+    
+    if (!result || !result.secure_url) {
+      console.error('Cloudinary geçersiz yanıt:', result);
+      return null;
+    }
 
     return result.secure_url;
   } catch (error) {
-    console.error('Buffer yükleme hatası:', error);
+    console.error('Buffer yükleme hatası (detaylı):', error);
+    // Hata stack'i de göster
+    if (error instanceof Error && error.stack) {
+      console.error('Hata stack:', error.stack);
+    }
     return null;
   }
 }
