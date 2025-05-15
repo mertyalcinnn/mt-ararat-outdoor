@@ -13,6 +13,13 @@ function generateUniqueId() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
+// Vercel için gerekli config
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 // Bu API rotası dinamik ve statik olarak oluşturulamaz
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +32,21 @@ const corsHeaders = {
 
 // OPTIONS handler for CORS
 export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }
 
 export async function POST(request: NextRequest) {
+  // CORS preflight için
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
   try {
     console.log('Dosya yükleme isteği alındı');
     
