@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     for (const dir of directories) {
       let exists = false;
       let canWrite = false;
-      let files = [];
+      let files: string[] = [];
       
       try {
         exists = fs.existsSync(dir.fullPath);
