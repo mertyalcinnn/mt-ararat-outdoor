@@ -13,13 +13,6 @@ function generateUniqueId() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-// Vercel için gerekli config
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 // Bu API rotası dinamik ve statik olarak oluşturulamaz
 export const dynamic = 'force-dynamic';
 
