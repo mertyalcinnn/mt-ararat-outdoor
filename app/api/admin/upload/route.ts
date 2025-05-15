@@ -12,6 +12,9 @@ function generateUniqueId() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
+// Bu API rotası dinamik ve statik olarak oluşturulamaz
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');

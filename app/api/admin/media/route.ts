@@ -103,3 +103,6 @@ export async function GET() {
     }, { status: 500 });
   }
 }
+
+// Dosya başına dinamik seçeneğini ekle
+export const dynamic = 'force-dynamic';

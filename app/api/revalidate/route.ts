@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 
+// Bu rotanın statik olarak oluşturulmasını engelle
+export const dynamic = 'force-dynamic';
+
 // Bu API endpoint'i, tüm sayfa önbelleklerini temizler
 // Admin panelinden yapılan değişiklikler sonrası çağrılır
 export async function GET(request: NextRequest) {
