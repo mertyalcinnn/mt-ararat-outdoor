@@ -5,6 +5,16 @@ import { getDictionary } from "@/dictionaries";
 import SafeImage from "@/components/SafeImage";
 import React from "react";
 
+// Aktivite arayüzünü tanımlayalım
+interface Activity {
+  title: string;
+  slug: string;
+  description: string;
+  coverImage?: string;
+  difficultyLevel: string;
+  duration: string;
+}
+
 // Sayfanın dinamik olduğunu belirt - her istekte yeniden oluşturulsun
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,7 +39,7 @@ export default async function ActivitiesPage({
       params.lang
     }] Aktiviteler sayfası: Aktiviteler alınıyor...`
   );
-  const activities = await getAllActivities();
+  const activities = await getAllActivities() as Activity[];
   console.log(
     `[${new Date().toISOString()}] [${params.lang}] Aktiviteler sayfası: ${
       activities?.length || 0
@@ -46,7 +56,7 @@ export default async function ActivitiesPage({
           {dict.homepage.activities.description}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {activities.map((activity) => (
+          {activities.map((activity: Activity) => (
             <Link
               href={`/${params.lang}/activities/${activity.slug}`}
               key={activity.slug}

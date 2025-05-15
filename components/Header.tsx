@@ -37,7 +37,7 @@ export default function Header({ lang, navigation }: { lang: Locale, navigation:
 
   return (
     <header
-      className={`fixed w-full z-50 transition-all duration-300 ${
+      className={`fixed w-full z-[100] transition-all duration-300 ${
         scrolled
           ? "bg-white shadow-md backdrop-blur-sm py-2 bg-opacity-95"
           : "bg-transparent py-4"

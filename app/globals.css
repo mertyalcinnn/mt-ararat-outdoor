@@ -18,6 +18,22 @@
   --admin-light: #F8FAFC; /* slate-50 */
 }
 
+/* Sabit header'lı sayfalar için yardımcı sınıf */
+.page-with-header {
+  position: relative;
+  margin-top: 6rem; /* 96px */
+  padding-top: 4rem; /* 64px */
+  padding-bottom: 3rem; /* 48px */
+}
+
+/* Fixed header için clearfix */
+body::before {
+  content: "";
+  display: block;
+  height: 0; /* Sayfa yüklenmeden önce boşluk oluşturma */
+  visibility: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
