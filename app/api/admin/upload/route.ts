@@ -38,6 +38,13 @@ export async function OPTIONS() {
 
 // POST handler
 export async function POST(request: Request) {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    return NextResponse.json(
+      { error: 'Cloudinary configuration is missing' },
+      { status: 500 }
+    );
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -62,11 +69,16 @@ export async function POST(request: Request) {
       ).end(buffer);
     });
 
+    if (!result || typeof result !== 'object' || !('secure_url' in result)) {
+      throw new Error('Invalid upload result');
+    }
+
     return NextResponse.json({
       success: true,
       url: result.secure_url,
     });
   } catch (error) {
+    console.error('Upload error:', error);
     return NextResponse.json(
       { error: 'Upload failed' },
       { status: 500 }
