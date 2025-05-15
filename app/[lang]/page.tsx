@@ -6,7 +6,11 @@ import { Locale } from "../../lib/i18n";
 import Hero from "../../components/Hero";
 import EnhancedActivityList from "../../components/EnhancedActivityList";
 import InstagramPromoBanner from "../../components/InstagramPromoBanner";
-import { getHomepageData, getAllActivities, getTestimonials } from "../../lib/api";
+import {
+  getHomepageData,
+  getAllActivities,
+  getTestimonials,
+} from "../../lib/api";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -20,8 +24,8 @@ interface Testimonial {
 
 // Sayfa yenileme stratejisi - Her istekte yeniden oluştur
 export const revalidate = 0;
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function Home({ params }: { params: { lang: Locale } }) {
   // Dil parametresini güvenli bir şekilde al
@@ -31,49 +35,49 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     // Veri yükleme işlemlerini try-catch içine alalım
     let homeData: any = {};
     try {
-      homeData = await getHomepageData() || {
+      homeData = (await getHomepageData()) || {
         heroImage: "/images/hero-fallback.jpg", // varsayılan bir resim yolu
       };
     } catch (homeError) {
-      console.error('Ana sayfa verileri yüklenemedi:', homeError);
+      console.error("Ana sayfa verileri yüklenemedi:", homeError);
       homeData = {
         heroImage: "/images/hero-fallback.jpg", // varsayılan bir resim yolu
       };
     }
-    
+
     // Aktiviteleri almayı deneyelim
     let activities: any[] = [];
     try {
       activities = await getAllActivities();
       console.log(`${activities.length} aktivite başarıyla yüklendi`);
     } catch (activitiesError) {
-      console.error('Aktiviteler yüklenemedi:', activitiesError);
+      console.error("Aktiviteler yüklenemedi:", activitiesError);
       // activities boş dizi olarak kalacak
     }
-    
+
     // Diğer verileri alalım
     let testimonials: Testimonial[] = [];
     try {
-      testimonials = await getTestimonials() as Testimonial[] || [];
+      testimonials = ((await getTestimonials()) as Testimonial[]) || [];
     } catch (testimonialsError) {
-      console.error('Müşteri yorumları yüklenemedi:', testimonialsError);
+      console.error("Müşteri yorumları yüklenemedi:", testimonialsError);
       // testimonials boş dizi olarak kalacak
     }
-    const dictionary = getDictionary(lang) || {
+    const dictionary = (await getDictionary(lang)) || {
       homepage: {},
       common: {
         mountHeight: "",
         yearsExperience: "",
         happyAdventurers: "",
-        uniqueActivities: ""
+        uniqueActivities: "",
       },
       navigation: {
         home: "",
         activities: "",
         about: "",
         contact: "",
-        reservation: ""
-      }
+        reservation: "",
+      },
     };
     // dictionary içinden homepage'i çıkar ve eğer yoksa varsayılan değerleri kullan
     const homepage = dictionary?.homepage || {
@@ -88,13 +92,13 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         equipment: { title: "", description: "" },
         moreInfo: "",
         guidesLabel: "",
-        certifiedTeam: ""
+        certifiedTeam: "",
       },
       testimonials: { title: "", description: "" },
       instagram: { title: "", description: "", followUs: "" },
-      cta: { title: "", description: "", contact: "", explore: "" }
+      cta: { title: "", description: "", contact: "", explore: "" },
     };
-    
+
     // Instagram kullanıcı adı
     const instagramUsername = "likyaclimbing_olympos";
 
@@ -109,17 +113,28 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         />
 
         {/* Aktiviteler Bölümü */}
-        <section id="activities" className="section relative overflow-hidden bg-light py-20">
+        <section
+          id="activities"
+          className="section relative overflow-hidden bg-light py-20"
+        >
           {/* Dekoratif elemanlar */}
           <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-white to-transparent z-10"></div>
           <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-white to-transparent z-10"></div>
           <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary/5 rounded-full"></div>
           <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-primary/5 rounded-full"></div>
-          
+
           {/* Mountain silhouette */}
           <div className="absolute bottom-0 left-0 w-full h-40 z-0 opacity-10">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full">
-              <path d="M0,0 L0,120 L1200,120 L1200,0 L1100,90 L1000,30 L900,70 L800,40 L700,90 L600,50 L500,80 L400,30 L300,70 L200,40 L100,90 L0,0 Z" fill="currentColor" className="text-primary"></path>
+            <svg
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+              className="w-full h-full"
+            >
+              <path
+                d="M0,0 L0,120 L1200,120 L1200,0 L1100,90 L1000,30 L900,70 L800,40 L700,90 L600,50 L500,80 L400,30 L300,70 L200,40 L100,90 L0,0 Z"
+                fill="currentColor"
+                className="text-primary"
+              ></path>
             </svg>
           </div>
 
@@ -128,10 +143,23 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
               <div className="inline-block mb-4">
                 <span className="px-4 py-1 bg-primary/10 text-primary rounded-full text-sm font-semibold tracking-wider uppercase">
                   {/* Dağ ve doğa simgesi */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="inline-block w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="inline-block w-4 h-4 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                      clipRule="evenodd"
+                    />
                   </svg>
-                  {lang === 'tr' ? 'Ağrı Dağı' : lang === 'en' ? 'Mount Ararat' : 'Гора Арарат'}
+                  {lang === "tr"
+                    ? "Ağrı Dağı"
+                    : lang === "en"
+                    ? "Mount Ararat"
+                    : "Гора Арарат"}
                 </span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
@@ -140,7 +168,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
               <p className="text-lg max-w-3xl mx-auto text-dark/70">
                 {homepage?.activities?.description || ""}
               </p>
-              
+
               {/* Renk ayraç */}
               <div className="flex justify-center mt-6">
                 <div className="w-16 h-1.5 bg-primary rounded-full"></div>
@@ -150,13 +178,29 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
             </div>
 
             <EnhancedActivityList activities={activities} lang={lang} />
-            
+
             {/* Tüm aktiviteler butonu */}
             <div className="text-center mt-12">
-              <Link href={`/${lang}/activities`} className="inline-flex items-center justify-center px-8 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                {lang === 'tr' ? 'Tüm Aktiviteleri Keşfet' : lang === 'en' ? 'Explore All Activities' : 'Исследовать все мероприятия'}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <Link
+                href={`/${lang}/activities`}
+                className="inline-flex items-center justify-center px-8 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                {lang === "tr"
+                  ? "Tüm Aktiviteleri Keşfet"
+                  : lang === "en"
+                  ? "Explore All Activities"
+                  : "Исследовать все мероприятия"}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 ml-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </Link>
             </div>
@@ -171,25 +215,33 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                 <span className="text-4xl md:text-5xl font-bold mb-2">
                   {dictionary?.common?.mountHeight || ""}
                 </span>
-                <p className="text-white/80">{homepage?.stats?.mountHeight || ""}</p>
+                <p className="text-white/80">
+                  {homepage?.stats?.mountHeight || ""}
+                </p>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
                   {dictionary?.common?.yearsExperience || ""}
                 </span>
-                <p className="text-white/80">{homepage?.stats?.experience || ""}</p>
+                <p className="text-white/80">
+                  {homepage?.stats?.experience || ""}
+                </p>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
                   {dictionary?.common?.happyAdventurers || ""}
                 </span>
-                <p className="text-white/80">{homepage?.stats?.clients || ""}</p>
+                <p className="text-white/80">
+                  {homepage?.stats?.clients || ""}
+                </p>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-4xl md:text-5xl font-bold mb-2">
                   {dictionary?.common?.uniqueActivities || ""}
                 </span>
-                <p className="text-white/80">{homepage?.stats?.activities || ""}</p>
+                <p className="text-white/80">
+                  {homepage?.stats?.activities || ""}
+                </p>
               </div>
             </div>
           </div>
@@ -421,7 +473,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         </section>
 
         {/* Instagram Beslemesi Bölümü */}
-        <InstagramPromoBanner 
+        <InstagramPromoBanner
           title={homepage?.instagram?.title || ""}
           description={homepage?.instagram?.description || ""}
           followText={homepage?.instagram?.followUs || ""}
@@ -431,7 +483,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
       </div>
     );
   } catch (error) {
-    console.error('Ana sayfa render hatası:', error);
+    console.error("Ana sayfa render hatası:", error);
     throw error; // Error boundary'e iletmek için hatayı tekrar fırlatıyoruz
   }
 }

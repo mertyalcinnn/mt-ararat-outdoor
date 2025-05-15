@@ -13,11 +13,11 @@ import { getDictionary } from "../../dictionaries";
 const inter = Inter({ subsets: ["latin"] });
 
 // Sayfa önbelleğini devre dışı bırak
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export function generateStaticParams() {
-  return [{ lang: 'tr' }, { lang: 'en' }, { lang: 'ru' }];
+  return [{ lang: "tr" }, { lang: "en" }, { lang: "ru" }];
 }
 
 export default async function LangLayout({
@@ -28,9 +28,9 @@ export default async function LangLayout({
   params: { lang: Locale };
 }) {
   const lang = params?.lang || "tr";
-  
-  // getDictionary'yi burada çağır ve değerlerini aşağıya ilet
-  const dictionary = getDictionary(lang) || {};
+
+  // Await the async getDictionary function
+  const dictionary = (await getDictionary(lang)) || {};
   const navigation = dictionary?.navigation || {
     home: "Home",
     activities: "Activities",

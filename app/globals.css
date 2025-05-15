@@ -108,6 +108,11 @@ img.broken::after {
     @apply py-16 md:py-24;
   }
   
+  /* Sabit header'a sahip sayfalarda içerik için ekstra padding */
+  .content-with-fixed-header {
+    @apply pt-32; /* Bu, sabit header'ın altına düşmemesi için içeriğe padding ekler */
+  }
+  
   .btn {
     @apply inline-flex items-center justify-center px-6 py-3 rounded-md font-medium transition-all duration-300;
   }

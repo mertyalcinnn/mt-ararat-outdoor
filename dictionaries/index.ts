@@ -284,7 +284,7 @@ const dictionaries = {
   ru
 };
 
-export const getDictionary = (locale: Locale = 'tr') => {
+export async function getDictionary(locale: Locale = 'tr') {
   try {
     // Make sure locale is one of the valid locales
     const safeLocale = locales.includes(locale) ? locale : 'tr';
@@ -293,4 +293,4 @@ export const getDictionary = (locale: Locale = 'tr') => {
     console.error('Dictionary error:', error);
     return dictionaries.tr; // Emergency fallback
   }
-};
+}

@@ -7,6 +7,8 @@ import { getAllActivitiesFromDB, getActivityBySlugFromDB } from './api-mongodb';
 
 // JSON dosyalarını okuma
 export async function getJsonData(filePath: string) {
+  'use server';
+  
   const fullPath = join(process.cwd(), filePath);
   if (!fs.existsSync(fullPath)) {
     console.error(`Dosya bulunamadı: ${fullPath}`);
@@ -25,6 +27,8 @@ export async function getJsonData(filePath: string) {
 
 // Homepage verilerini getir
 export async function getHomepageData() {
+  'use server';
+  
   return await getJsonData('data/homepage.json');
 }
 
@@ -213,5 +217,7 @@ export async function getContactData() {
 
 // Müşteri yorumlarını getir
 export async function getTestimonials() {
+  'use server';
+  
   return await getJsonData('data/testimonials.json');
 }

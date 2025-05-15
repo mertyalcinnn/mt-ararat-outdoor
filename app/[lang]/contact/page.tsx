@@ -1,23 +1,28 @@
 // Using server component since we're fetching data
 // Remove "use client" directive
 
-import ReactMarkdown from 'react-markdown';
-import Link from 'next/link';
-import PageHeader from '../../../components/PageHeader';
-import ContactForm from '../../../components/ContactForm';
-import { getContactData } from '../../../lib/api';
-import { Locale } from '../../../lib/i18n';
-import { getDictionary } from '../../../dictionaries';
+import ReactMarkdown from "react-markdown";
+import Link from "next/link";
+import PageHeader from "../../../components/PageHeader";
+import ContactForm from "../../../components/ContactForm";
+import { getContactData } from "../../../lib/api";
+import { Locale } from "../../../lib/i18n";
+import { getDictionary } from "../../../dictionaries";
 
-export default async function ContactPage({ params }: { params: { lang: Locale } }) {
+export default async function ContactPage({
+  params,
+}: {
+  params: { lang: Locale };
+}) {
   const contactData = await getContactData();
-  const dictionary = getDictionary(params.lang);
+  const dictionary = await getDictionary(params.lang);
   const { navigation } = dictionary;
-  
+
   // Dile göre metinler
   const contactPageTexts = {
     tr: {
-      subtitle: "Sorularınız veya rezervasyon talepleriniz için bizimle iletişime geçin.",
+      subtitle:
+        "Sorularınız veya rezervasyon talepleriniz için bizimle iletişime geçin.",
       contactTitle: "Bize Ulaşın",
       address: "Adres",
       email: "E-posta",
@@ -27,18 +32,21 @@ export default async function ContactPage({ params }: { params: { lang: Locale }
       infoBoxes: {
         activityInfo: {
           title: "Aktivite Bilgileri",
-          description: "Aktivitelerimiz hakkında detaylı bilgi almak için iletişime geçebilirsiniz.",
-          link: "Aktiviteleri İncele"
+          description:
+            "Aktivitelerimiz hakkında detaylı bilgi almak için iletişime geçebilirsiniz.",
+          link: "Aktiviteleri İncele",
         },
         reservation: {
           title: "Rezervasyon",
-          description: "Aktivite rezervasyonu için formu doldurabilir veya bizi arayabilirsiniz."
+          description:
+            "Aktivite rezervasyonu için formu doldurabilir veya bizi arayabilirsiniz.",
         },
         specialRequests: {
           title: "Özel Talepler",
-          description: "Özel grup organizasyonları ve kurumsal etkinlikler için bizimle iletişime geçin."
-        }
-      }
+          description:
+            "Özel grup organizasyonları ve kurumsal etkinlikler için bizimle iletişime geçin.",
+        },
+      },
     },
     en: {
       subtitle: "Contact us for your questions or reservation requests.",
@@ -51,18 +59,21 @@ export default async function ContactPage({ params }: { params: { lang: Locale }
       infoBoxes: {
         activityInfo: {
           title: "Activity Information",
-          description: "You can contact us for detailed information about our activities.",
-          link: "Explore Activities"
+          description:
+            "You can contact us for detailed information about our activities.",
+          link: "Explore Activities",
         },
         reservation: {
           title: "Reservation",
-          description: "You can fill out the form or call us for activity reservations."
+          description:
+            "You can fill out the form or call us for activity reservations.",
         },
         specialRequests: {
           title: "Special Requests",
-          description: "Contact us for private group organizations and corporate events."
-        }
-      }
+          description:
+            "Contact us for private group organizations and corporate events.",
+        },
+      },
     },
     ru: {
       subtitle: "Свяжитесь с нами по вопросам или запросам на бронирование.",
@@ -75,36 +86,36 @@ export default async function ContactPage({ params }: { params: { lang: Locale }
       infoBoxes: {
         activityInfo: {
           title: "Информация о мероприятиях",
-          description: "Вы можете связаться с нами для получения подробной информации о наших мероприятиях.",
-          link: "Исследовать мероприятия"
+          description:
+            "Вы можете связаться с нами для получения подробной информации о наших мероприятиях.",
+          link: "Исследовать мероприятия",
         },
         reservation: {
           title: "Бронирование",
-          description: "Вы можете заполнить форму или позвонить нам для бронирования мероприятий."
+          description:
+            "Вы можете заполнить форму или позвонить нам для бронирования мероприятий.",
         },
         specialRequests: {
           title: "Специальные запросы",
-          description: "Свяжитесь с нами для организации частных групп и корпоративных мероприятий."
-        }
-      }
-    }
+          description:
+            "Свяжитесь с нами для организации частных групп и корпоративных мероприятий.",
+        },
+      },
+    },
   };
-  
+
   const texts = contactPageTexts[params.lang];
-  
+
   return (
     <div>
-      <PageHeader 
-        title={contactData.title} 
-        description={texts.subtitle} 
-      />
-      
+      <PageHeader title={contactData.title} description={texts.subtitle} />
+
       <section className="section">
         <div className="container-custom">
           <div className="grid md:grid-cols-2 gap-12">
             <div>
               <h2 className="text-3xl font-bold mb-6">{texts.contactTitle}</h2>
-              
+
               <div className="space-y-6">
                 {contactData.address && (
                   <div>
@@ -112,28 +123,42 @@ export default async function ContactPage({ params }: { params: { lang: Locale }
                     <p>{contactData.address}</p>
                   </div>
                 )}
-                
+
                 {contactData.email && (
                   <div>
                     <h3 className="text-xl font-bold mb-2">{texts.email}</h3>
-                    <p><a href={`mailto:${contactData.email}`} className="text-primary hover:underline">{contactData.email}</a></p>
+                    <p>
+                      <a
+                        href={`mailto:${contactData.email}`}
+                        className="text-primary hover:underline"
+                      >
+                        {contactData.email}
+                      </a>
+                    </p>
                   </div>
                 )}
-                
+
                 {contactData.phone && (
                   <div>
                     <h3 className="text-xl font-bold mb-2">{texts.phone}</h3>
-                    <p><a href={`tel:${contactData.phone}`} className="text-primary hover:underline">{contactData.phone}</a></p>
+                    <p>
+                      <a
+                        href={`tel:${contactData.phone}`}
+                        className="text-primary hover:underline"
+                      >
+                        {contactData.phone}
+                      </a>
+                    </p>
                   </div>
                 )}
               </div>
-              
+
               {contactData.content && (
                 <div className="mt-8 prose">
                   <ReactMarkdown>{contactData.content}</ReactMarkdown>
                 </div>
               )}
-              
+
               {contactData.mapLocation && (
                 <div className="mt-8">
                   <h3 className="text-xl font-bold mb-4">{texts.location}</h3>
@@ -152,7 +177,7 @@ export default async function ContactPage({ params }: { params: { lang: Locale }
                 </div>
               )}
             </div>
-            
+
             <div>
               <h2 className="text-3xl font-bold mb-6">{texts.messageTitle}</h2>
               <ContactForm lang={params.lang} />
@@ -160,29 +185,52 @@ export default async function ContactPage({ params }: { params: { lang: Locale }
           </div>
         </div>
       </section>
-      
+
       <section className="section bg-light">
         <div className="container-custom">
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <div className="text-primary text-4xl mb-4">🌄</div>
-              <h3 className="text-xl font-bold mb-2">{texts.infoBoxes.activityInfo.title}</h3>
+              <h3 className="text-xl font-bold mb-2">
+                {texts.infoBoxes.activityInfo.title}
+              </h3>
               <p className="mb-4">{texts.infoBoxes.activityInfo.description}</p>
-              <Link href={`/${params.lang}/activities`} className="text-primary hover:underline">{texts.infoBoxes.activityInfo.link}</Link>
+              <Link
+                href={`/${params.lang}/activities`}
+                className="text-primary hover:underline"
+              >
+                {texts.infoBoxes.activityInfo.link}
+              </Link>
             </div>
-            
+
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <div className="text-primary text-4xl mb-4">📅</div>
-              <h3 className="text-xl font-bold mb-2">{texts.infoBoxes.reservation.title}</h3>
+              <h3 className="text-xl font-bold mb-2">
+                {texts.infoBoxes.reservation.title}
+              </h3>
               <p className="mb-4">{texts.infoBoxes.reservation.description}</p>
-              <a href={`tel:${contactData.phone}`} className="text-primary hover:underline">{contactData.phone}</a>
+              <a
+                href={`tel:${contactData.phone}`}
+                className="text-primary hover:underline"
+              >
+                {contactData.phone}
+              </a>
             </div>
-            
+
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
               <div className="text-primary text-4xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold mb-2">{texts.infoBoxes.specialRequests.title}</h3>
-              <p className="mb-4">{texts.infoBoxes.specialRequests.description}</p>
-              <a href={`mailto:${contactData.email}`} className="text-primary hover:underline">{contactData.email}</a>
+              <h3 className="text-xl font-bold mb-2">
+                {texts.infoBoxes.specialRequests.title}
+              </h3>
+              <p className="mb-4">
+                {texts.infoBoxes.specialRequests.description}
+              </p>
+              <a
+                href={`mailto:${contactData.email}`}
+                className="text-primary hover:underline"
+              >
+                {contactData.email}
+              </a>
             </div>
           </div>
         </div>
