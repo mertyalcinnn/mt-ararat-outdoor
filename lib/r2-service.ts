@@ -78,6 +78,14 @@ export async function uploadToR2(
   contentType: string = 'image/jpeg'
 ): Promise<string> {
   try {
+    // Giriş parametrelerini kontrol et ve logla
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Boş dosya buffer\'ı - yüklenemez');
+    }
+    
+    console.log(`R2 yükleme başlatılıyor - Dosya: ${filename}, Boyut: ${buffer.length} bytes, Tür: ${contentType}`);
+    console.log(`R2 yapılandırması: Endpoint=${R2_ENDPOINT}, Bucket=${R2_BUCKET_NAME}`);
+    
     // Dosya adını güvenli hale getir
     const safeFilename = sanitizeFilename(filename);
     
@@ -90,10 +98,25 @@ export async function uploadToR2(
       Key: uniqueFilename,
       Body: buffer,
       ContentType: contentType,
+      // ACL parametresi R2'de sorun yaratabilir, bu yüzden kaldırıldı
     });
     
     // Dosyayı yükle
-    await s3Client.send(command);
+    try {
+      console.log('R2 komut gönderiliyor...');
+      await s3Client.send(command);
+      console.log('R2 yükleme işlemi başarılı');
+    } catch (uploadError) {
+      console.error('R2 yükleme işlemi başarısız:', uploadError);
+      const errorMessage = uploadError instanceof Error ? uploadError.message : String(uploadError);
+      
+      if (errorMessage.includes('Access Denied')) {
+        console.error('R2 erişim hatası: Bucket erişim izinleri veya API token yetkileri yetersiz olabilir.');
+        throw new Error('R2 erişim hatası: İzinlerinizi kontrol edin. Bucket public erişime açık ve API token gerekli yetkilere sahip olmalı.');
+      }
+      
+      throw uploadError;
+    }
     
     // Erişilebilir URL oluştur
     const fileUrl = `${R2_PUBLIC_URL}/${uniqueFilename}`;
@@ -102,8 +125,26 @@ export async function uploadToR2(
     
     return fileUrl;
   } catch (error) {
-    console.error('R2 yükleme hatası:', error);
-    throw new Error(`Dosya R2'ye yüklenirken hata oluştu: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('R2 yükleme hatası (detaylı):', error);
+    
+    // Detaylı hata mesajı
+    let errorMessage = 'R2 yükleme hatası';
+    
+    if (error instanceof Error) {
+      errorMessage = `Dosya R2'ye yüklenirken hata oluştu: ${error.message}`;
+      // Stack trace ekle
+      if (error.stack) {
+        console.error('Hata stack trace:', error.stack);
+      }
+    }
+    
+    // AWS SDK özel hata tipleri için kontrol
+    const anyError = error as any;
+    if (anyError.$metadata && anyError.Code) {
+      errorMessage += ` (Kod: ${anyError.Code}, RequestId: ${anyError.$metadata.requestId || 'bilinmiyor'})`;
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 

@@ -8,17 +8,38 @@ import OptimizedImage from "./OptimizedImage";
 const ImagePreview = ({ imageUrl }: { imageUrl: string }) => {
   if (!imageUrl) return null;
 
+  // Blob URL'lerini doğrudan kullanırken dikkatli olalım
+  const isDataUrl = imageUrl.startsWith("data:");
+  const isBlobUrl = imageUrl.startsWith("blob:") || imageUrl.includes("blob:");
+
+  // Blob ve data URL'leri için unoptimized önbellek kullanılır
+  const unoptimizedImage = isDataUrl || isBlobUrl;
+
   return (
     <div className="px-4 pt-4">
       <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-300 bg-slate-100">
-        <OptimizedImage
-          src={imageUrl}
-          alt="Seçilen Görsel"
-          width={300}
-          height={200}
-          className="w-full h-full object-contain rounded-lg"
-          objectFit="contain"
-        />
+        {unoptimizedImage ? (
+          // Blob ve data URL'leri için normal img
+          <img
+            src={imageUrl}
+            alt="Seçilen Görsel"
+            className="w-full h-full object-contain rounded-lg"
+            onError={(e) => {
+              console.error("Görsel yüklenemedi:", imageUrl);
+              e.currentTarget.src = "/images/placeholder-image.jpg";
+            }}
+          />
+        ) : (
+          // Normal URL'ler için OptimizedImage
+          <OptimizedImage
+            src={imageUrl}
+            alt="Seçilen Görsel"
+            width={300}
+            height={200}
+            className="w-full h-full object-contain rounded-lg"
+            objectFit="contain"
+          />
+        )}
 
         {/* URL bilgisi göster */}
         <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate">
@@ -255,8 +276,13 @@ export default function AdvancedImageUploader({
         console.log("Tam URL kullanılıyor:", imageUrl);
 
         // URL'deki blob: önekini temizleyelim
-        if (imageUrl.includes("blob:")) {
-          const cleanUrl = imageUrl.replace(/blob:[^/]+\//, "");
+        if (imageUrl.includes("blob:") || imageUrl.includes("/uploads/blob:")) {
+          // Daha agresif URL temizleme
+          let cleanUrl = imageUrl;
+          cleanUrl = cleanUrl.replace(/blob:[^/]+\//, "");
+          cleanUrl = cleanUrl.replace(/\/uploads\/blob:[^/]+\//, "/uploads/");
+          cleanUrl = cleanUrl.replace(/\/uploads\/blob:/, "/uploads/");
+
           console.log("Temizlenmiş URL:", cleanUrl);
           onImageSelect(cleanUrl);
           setPreviewUrl(cleanUrl);
@@ -270,8 +296,13 @@ export default function AdvancedImageUploader({
         console.log("Göreli URL kullanılıyor:", imageUrl);
 
         // URL'deki blob: önekini temizleyelim
-        if (imageUrl.includes("blob:")) {
-          const cleanUrl = imageUrl.replace(/blob:[^/]+\//, "");
+        if (imageUrl.includes("blob:") || imageUrl.includes("/uploads/blob:")) {
+          // Daha agresif URL temizleme
+          let cleanUrl = imageUrl;
+          cleanUrl = cleanUrl.replace(/blob:[^/]+\//, "");
+          cleanUrl = cleanUrl.replace(/\/uploads\/blob:[^/]+\//, "/uploads/");
+          cleanUrl = cleanUrl.replace(/\/uploads\/blob:/, "/uploads/");
+
           console.log("Temizlenmiş URL:", cleanUrl);
           onImageSelect(cleanUrl);
           setPreviewUrl(cleanUrl);

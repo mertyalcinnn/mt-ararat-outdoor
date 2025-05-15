@@ -38,6 +38,18 @@ export async function POST(request: NextRequest) {
           code: 'R2_CONFIG_MISSING'
         }, { status: 500 });
       }
+      
+      // API anahtarlarının uzunluğunu doğrula
+      if (process.env.R2_ACCESS_KEY.length < 10 || process.env.R2_SECRET_KEY.length < 10) {
+        console.error('R2 API anahtarları çok kısa veya geçersiz');
+        return NextResponse.json({
+          error: 'Cloudflare R2 API anahtarları geçersiz',
+          details: 'API anahtarları yeterince uzun değil veya yanlış formatta',
+          code: 'R2_INVALID_CREDENTIALS'
+        }, { status: 500 });
+      }
+      
+      console.log('R2 yapılandırması doğrulandı, yükleme devam edebilir');
     }
     
     // formData'yı kontrollü şekilde al
@@ -106,10 +118,17 @@ export async function POST(request: NextRequest) {
       // R2 URL'leri zaten tam URL olduğu için kontrol et
       const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${protocol}://${host}${imageUrl}`;
       
+      // URL'deki olası blob: öneklerini temizle
+      let cleanUrl = imageUrl;
+      if (imageUrl.includes('blob:')) {
+        cleanUrl = imageUrl.replace(/blob:[^/]+\//, '');
+        console.log('URL blob: öneki temizlendi:', cleanUrl);
+      }
+      
       const response = {
         success: true,
-        url: imageUrl,
-        fullUrl: fullUrl,
+        url: cleanUrl,
+        fullUrl: fullUrl.includes('blob:') ? fullUrl.replace(/blob:[^/]+\//, '') : fullUrl,
         filename: imageUrl.split('/').pop(),
         provider: useR2Storage ? 'cloudflare-r2' : 'filesystem'
       };

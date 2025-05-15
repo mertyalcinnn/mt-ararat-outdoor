@@ -68,8 +68,14 @@ export default function ImageUploader({
       let imageUrl = data.url;
 
       // Blob URL'leri temizle
-      if (imageUrl && imageUrl.includes("blob:")) {
+      if (
+        imageUrl &&
+        (imageUrl.includes("blob:") || imageUrl.includes("/uploads/blob:"))
+      ) {
+        // Daha agresif temizleme
         imageUrl = imageUrl.replace(/blob:[^/]+\//, "");
+        imageUrl = imageUrl.replace(/\/uploads\/blob:[^/]+\//, "/uploads/");
+        imageUrl = imageUrl.replace(/\/uploads\/blob:/, "/uploads/");
         console.log("Temizlenmiş URL:", imageUrl);
       }
 
