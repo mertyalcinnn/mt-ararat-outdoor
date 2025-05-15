@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import fs from 'fs';
-import { uploadImage as uploadImageToFileSystem } from '@/lib/image-service';
-import { uploadImage as uploadImageToR2 } from '@/lib/r2-service';
-import { isVercelProduction } from '@/lib/environment';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Cloudinary yapılandırması
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Benzersiz ID oluşturmak için yardımcı fonksiyon
 function generateUniqueId() {
-  // Zaman damgası ve rastgele sayı kullanarak benzersiz bir ID oluştur
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
@@ -19,40 +20,13 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
     
-    // R2 depolama kullanıp kullanmayacağımızı kontrol et
-    const useR2Storage = process.env.USE_R2_STORAGE === 'true' || isVercelProduction();
-    
-    // Ortam kontrolü artık R2 ile çalışabiliyor
-    if (isVercelProduction() && !useR2Storage) {
-      console.log('Vercel üretim ortamında dosya yükleme devre dışı');
-      return NextResponse.json({
-        error: 'Üretim ortamında görsel yükleme devre dışı bırakılmıştır.',
-        details: 'Üretim ortamında dosya sistemi salt-okunurdur. Lütfen görselleri geliştirme ortamında yükleyin ve sonra projeyi deploy edin.',
-        code: 'PRODUCTION_UPLOAD_DISABLED'
-      }, { status: 403 });
-    }
-    
-    // R2 depolama kullanılacaksa, API anahtarlarını kontrol et
-    if (useR2Storage) {
-      if (!process.env.R2_ACCESS_KEY || !process.env.R2_SECRET_KEY || !process.env.R2_BUCKET_NAME) {
-        console.error('R2 yapılandırma bilgileri eksik');
-        return NextResponse.json({
-          error: 'Cloudflare R2 yapılandırması eksik',
-          code: 'R2_CONFIG_MISSING'
-        }, { status: 500 });
-      }
-      
-      // API anahtarlarının uzunluğunu doğrula
-      if (process.env.R2_ACCESS_KEY.length < 10 || process.env.R2_SECRET_KEY.length < 10) {
-        console.error('R2 API anahtarları çok kısa veya geçersiz');
-        return NextResponse.json({
-          error: 'Cloudflare R2 API anahtarları geçersiz',
-          details: 'API anahtarları yeterince uzun değil veya yanlış formatta',
-          code: 'R2_INVALID_CREDENTIALS'
-        }, { status: 500 });
-      }
-      
-      console.log('R2 yapılandırması doğrulandı, yükleme devam edebilir');
+    // Cloudinary kimlik bilgilerini kontrol et
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('Cloudinary kimlik bilgileri eksik');
+      return NextResponse.json(
+        { error: 'Cloudinary yapılandırması eksik' },
+        { status: 500 }
+      );
     }
     
     // formData'yı kontrollü şekilde al
@@ -99,62 +73,60 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Görsel yükleme işlemi - R2 veya dosya sistemi
-      let imageUrl;
+      // Benzersiz bir dosya adı oluştur
+      const filename = `${generateUniqueId()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
-      if (useR2Storage) {
-        console.log('R2 depolama kullanılıyor...');
-        imageUrl = await uploadImageToR2(buffer, file.name);
-      } else {
-        console.log('Dosya sistemi depolaması kullanılıyor...');
-        imageUrl = await uploadImageToFileSystem(buffer, file.name);
-      }
+      // Cloudinary'ye yükle
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            folder: 'mt-ararat',
+            public_id: filename.split('.')[0], // Uzantıyı kaldır
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Cloudinary yükleme hatası:', error);
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        ).end(buffer);
+      });
       
-      if (!imageUrl) {
-        throw new Error('Görsel yükleme başarısız');
-      }
+      // Sonucu döndür
+      console.log('Görsel Cloudinary\'ye başarıyla yüklendi', result);
       
-      // URL oluştur
-      const host = request.headers.get('host') || 'localhost:3000';
-      const protocol = host.includes('localhost') ? 'http' : 'https';
-      
-      // R2 URL'leri zaten tam URL olduğu için kontrol et
-      const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${protocol}://${host}${imageUrl}`;
-      
-      // URL'deki olası blob: öneklerini temizle
-      let cleanUrl = imageUrl;
-      if (imageUrl.includes('blob:')) {
-        cleanUrl = imageUrl.replace(/blob:[^/]+\//, '');
-        console.log('URL blob: öneki temizlendi:', cleanUrl);
-      }
-      
-      const response = {
+      // @ts-ignore - result tipini any olarak kabul et
+      return NextResponse.json({
         success: true,
-        url: cleanUrl,
-        fullUrl: fullUrl.includes('blob:') ? fullUrl.replace(/blob:[^/]+\//, '') : fullUrl,
-        filename: imageUrl.split('/').pop(),
-        provider: useR2Storage ? 'cloudflare-r2' : 'filesystem'
-      };
+        // @ts-ignore - result tipini any olarak kabul et
+        url: result.secure_url,
+        // @ts-ignore - result tipini any olarak kabul et
+        fullUrl: result.secure_url,
+        // @ts-ignore - result tipini any olarak kabul et
+        filename: result.public_id
+      });
       
-      console.log('Başarılı yanıt:', response);
-      return NextResponse.json(response);
-    } catch (uploadError) {
-      console.error('Görsel yükleme hatası:', uploadError);
+    } catch (cloudinaryError) {
+      console.error('Cloudinary yükleme hatası:', cloudinaryError);
       return NextResponse.json(
         { 
-          error: 'Görsel yüklenemedi', 
-          details: uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata',
-          code: 'UPLOAD_ERROR'
+          error: 'Görsel Cloudinary\'ye yüklenemedi', 
+          details: cloudinaryError instanceof Error ? cloudinaryError.message : String(cloudinaryError)
         },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Genel yükleme hatası:', error);
-    return NextResponse.json({
-      error: 'Dosya yüklenemedi',
-      details: error instanceof Error ? error.message : String(error),
-      stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
-    }, { status: 500 });
+    console.error('Genel hata:', error);
+    return NextResponse.json(
+      { 
+        error: 'Görsel yüklenemedi', 
+        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      },
+      { status: 500 }
+    );
   }
 }

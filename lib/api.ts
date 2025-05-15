@@ -2,6 +2,7 @@
 
 import fs from 'fs';
 import { join } from 'path';
+import { Activity } from './types';
 import { getAllActivities as getActivitiesFromFile, getActivityBySlug as getActivityDetailFromFile } from './activities';
 import { getAllActivitiesFromDB, getActivityBySlugFromDB } from './api-mongodb';
 
@@ -33,59 +34,24 @@ export async function getHomepageData() {
 }
 
 // Tüm aktiviteleri getir - MongoDB'den alma işlemi ekle
-export async function getAllActivities() {
+export async function getAllActivities(): Promise<Activity[]> {
   try {
-    // NO-STORE özelliği - her istekte yeni veri al
-    const cacheHeaders = { cache: 'no-store' };
-    
-    console.log('getAllActivities: Aktiviteler alınıyor...');
-    
-    // Her iki kaynaktan da aktiviteleri al ve birleştir
-    let mongoActivities: any[] = [];
-    let fileActivities: any[] = [];
-    
     // MongoDB'den veri al
-    try {
-      console.log('MongoDB\'den veri alınıyor...');
-      mongoActivities = await getAllActivitiesFromDB();
-      console.log(`MongoDB'den ${mongoActivities.length} aktivite alındı.`);
-    } catch (mongoErr) {
-      console.error('MongoDB veri alımında hata:', mongoErr);
-      // Hata durumunda boş dizi kullan
-      mongoActivities = [];
-    }
-    
-    // Dosya sisteminden veri al
-    try {
-      console.log('Dosya sisteminden veri alınıyor...');
-      fileActivities = await getActivitiesFromFile();
-      console.log(`Dosya sisteminden ${fileActivities.length} aktivite alındı.`);
-    } catch (fileErr) {
-      console.error('Dosya sistemi veri alımında hata:', fileErr);
-      // Hata durumunda boş dizi kullan
-      fileActivities = [];
-    }
-    
-    // Üç farklı durum için farklı davranış
-    // 1. Her iki kaynaktan da veri alabildiysek, MongoDB verileri öncelikli
-    if (mongoActivities.length > 0) {
-      console.log('MongoDB verileri kullanılıyor...');
+    const mongoActivities = await getAllActivitiesFromDB();
+    if (mongoActivities && mongoActivities.length > 0) {
       return mongoActivities;
-    } 
-    // 2. Sadece dosya sisteminden veri alabildiysek
-    else if (fileActivities.length > 0) {
-      console.log('Dosya sistemi verileri kullanılıyor...');
+    }
+
+    // Dosya sisteminden veri al
+    const fileActivities = await getActivitiesFromFile();
+    if (fileActivities && fileActivities.length > 0) {
       return fileActivities;
     }
-    // 3. Hiçbir yerden veri alamadıysak - varsayılan boş veri döndür
-    else {
-      console.warn('Hiçbir kaynaktan veri alınamadı! Varsayılan boş aktivite listesi döndürülüyor.');
-      return [];
-    }
-    
+
+    // Varsayılan aktiviteleri kullan (boş dizi)
+    return [];
   } catch (error) {
-    console.error('Aktiviteleri alırken genel hata:', error);
-    // Genel hata durumunda boş dizi döndür
+    console.error('Aktiviteler alınırken hata:', error);
     return [];
   }
 }

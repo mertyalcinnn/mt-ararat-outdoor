@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { Activity } from './types';
 
 // Aktivitelerin yolları
 const contentDir = path.join(process.cwd(), 'content', 'activities');
@@ -13,39 +14,34 @@ export async function getRootActivities() {
   try {
     const activitiesDir = path.join(process.cwd(), 'activities');
     if (!fs.existsSync(activitiesDir)) {
-      console.log(`'activities' kök dizini bulunamadı!`);
+      console.error(`'activities' kök dizini bulunamadı!`);
       return [];
     }
 
-    console.log(`Kök 'activities' dizininden aktiviteler okunuyor...`);
-    
-    // Dosyaları oku
-    const fileNames = fs.readdirSync(activitiesDir);
-    const jsonFiles = fileNames.filter(file => file.endsWith('.json'));
-    
+    const jsonFiles = fs.readdirSync(activitiesDir).filter(file => file.endsWith('.json'));
+
     if (jsonFiles.length === 0) {
-      console.log(`Kök 'activities' dizininde JSON dosyası bulunamadı`);
+      console.error(`Kök 'activities' dizininde JSON dosyası bulunamadı`);
       return [];
     }
-    
-    console.log(`Kök dizinden ${jsonFiles.length} JSON aktivite dosyası bulundu.`);
-    
-    const activities = jsonFiles.map(fileName => {
+
+    const activities: Activity[] = [];
+
+    for (const file of jsonFiles) {
       try {
-        const filePath = path.join(activitiesDir, fileName);
-        const fileContents = fs.readFileSync(filePath, 'utf8');
+        const filePath = path.join(activitiesDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const activity = JSON.parse(content) as Activity;
         
-        const data = JSON.parse(fileContents);
-        return data;
+        if (isValidActivity(activity)) {
+          activities.push(activity);
+        }
       } catch (error) {
-        console.error(`${fileName} dosyası JSON olarak ayrıştırılamadı:`, error);
-        return null;
+        console.error(`Dosya okuma hatası (${file}):`, error);
       }
-    });
-    
-    const validActivities = activities.filter(Boolean);
-    console.log(`Kök 'activities' dizininden ${validActivities.length} geçerli JSON aktivite bulundu.`);
-    return validActivities;
+    }
+
+    return activities;
   } catch (error) {
     console.error(`'activities' kök dizininden aktiviteler okunurken hata:`, error);
     return [];
@@ -445,4 +441,27 @@ export async function getActivityBySlug(slug: string) {
     // Fallback aktivitelerde arama
     return getFallbackActivities().find(act => act.slug === slug) || null;
   }
+}
+
+function isValidActivity(activity: any): activity is Activity {
+  return (
+    activity &&
+    typeof activity === 'object' &&
+    typeof activity.id === 'string' &&
+    typeof activity.slug === 'string' &&
+    typeof activity.title === 'string' &&
+    typeof activity.description === 'string' &&
+    typeof activity.content === 'string' &&
+    typeof activity.image === 'string' &&
+    typeof activity.date === 'string' &&
+    typeof activity.location === 'string' &&
+    typeof activity.price === 'number' &&
+    typeof activity.duration === 'string' &&
+    typeof activity.difficulty === 'string' &&
+    typeof activity.maxParticipants === 'number' &&
+    typeof activity.currentParticipants === 'number' &&
+    typeof activity.isActive === 'boolean' &&
+    typeof activity.createdAt === 'string' &&
+    typeof activity.updatedAt === 'string'
+  );
 }

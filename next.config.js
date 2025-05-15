@@ -3,10 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     domains: [
-      'via.placeholder.com',
       'localhost',
       'mt-ararat-outdoor.vercel.app',
-      'test.dca1d77346db58b70426de41aea91f46.r2.cloudflarestorage.com',
+      'res.cloudinary.com',
       'likyaclimbing.com',
       'www.likyaclimbing.com'
     ],
@@ -31,7 +30,7 @@ const nextConfig = {
   output: 'standalone',
   // API yolları için server components ayarı
   experimental: {
-    serverComponentsExternalPackages: ['react-dom', '@mui/material'],
+    serverComponentsExternalPackages: ['react-dom'],
   },
   // Statik sayfaları otomatik olarak güncellemek için revalidate süresini kısa tut
   staticPageGenerationTimeout: 90,
