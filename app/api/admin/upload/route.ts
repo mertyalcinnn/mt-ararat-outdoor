@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import fs from 'fs';
-import { uploadImage } from '@/lib/image-service';
+import { uploadImage as uploadImageToFileSystem } from '@/lib/image-service';
+import { uploadImage as uploadImageToR2 } from '@/lib/r2-service';
 import { isVercelProduction } from '@/lib/environment';
 
 // Benzersiz ID oluşturmak için yardımcı fonksiyon
@@ -15,14 +16,28 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Dosya yükleme isteği alındı');
     
-    // Vercel üretim ortamında dosya yükleme işlemini devre dışı bırak
-    if (isVercelProduction()) {
+    // R2 depolama kullanıp kullanmayacağımızı kontrol et
+    const useR2Storage = process.env.USE_R2_STORAGE === 'true' || isVercelProduction();
+    
+    // Ortam kontrolü artık R2 ile çalışabiliyor
+    if (isVercelProduction() && !useR2Storage) {
       console.log('Vercel üretim ortamında dosya yükleme devre dışı');
       return NextResponse.json({
         error: 'Üretim ortamında görsel yükleme devre dışı bırakılmıştır.',
         details: 'Üretim ortamında dosya sistemi salt-okunurdur. Lütfen görselleri geliştirme ortamında yükleyin ve sonra projeyi deploy edin.',
         code: 'PRODUCTION_UPLOAD_DISABLED'
       }, { status: 403 });
+    }
+    
+    // R2 depolama kullanılacaksa, API anahtarlarını kontrol et
+    if (useR2Storage) {
+      if (!process.env.R2_ACCESS_KEY || !process.env.R2_SECRET_KEY || !process.env.R2_BUCKET_NAME) {
+        console.error('R2 yapılandırma bilgileri eksik');
+        return NextResponse.json({
+          error: 'Cloudflare R2 yapılandırması eksik',
+          code: 'R2_CONFIG_MISSING'
+        }, { status: 500 });
+      }
     }
     
     // formData'yı kontrollü şekilde al
@@ -69,8 +84,16 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Görseli yükle - bu artık image-service ile yapılıyor
-      const imageUrl = await uploadImage(buffer, file.name);
+      // Görsel yükleme işlemi - R2 veya dosya sistemi
+      let imageUrl;
+      
+      if (useR2Storage) {
+        console.log('R2 depolama kullanılıyor...');
+        imageUrl = await uploadImageToR2(buffer, file.name);
+      } else {
+        console.log('Dosya sistemi depolaması kullanılıyor...');
+        imageUrl = await uploadImageToFileSystem(buffer, file.name);
+      }
       
       if (!imageUrl) {
         throw new Error('Görsel yükleme başarısız');
@@ -80,13 +103,15 @@ export async function POST(request: NextRequest) {
       const host = request.headers.get('host') || 'localhost:3000';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       
-      // NOT: Göreceli URL döndür, tam URL değil - bu canlı ortamda sorun yaratmasın
+      // R2 URL'leri zaten tam URL olduğu için kontrol et
+      const fullUrl = imageUrl.startsWith('http') ? imageUrl : `${protocol}://${host}${imageUrl}`;
+      
       const response = {
         success: true,
-        url: imageUrl, // Göreceli URL, örneğin /uploads/image.jpg
-        fullUrl: imageUrl.startsWith('http') ? imageUrl : `${protocol}://${host}${imageUrl}`,
+        url: imageUrl,
+        fullUrl: fullUrl,
         filename: imageUrl.split('/').pop(),
-        provider: 'filesystem'
+        provider: useR2Storage ? 'cloudflare-r2' : 'filesystem'
       };
       
       console.log('Başarılı yanıt:', response);
