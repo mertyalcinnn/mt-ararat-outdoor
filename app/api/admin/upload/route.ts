@@ -26,13 +26,14 @@ const corsHeaders = {
 };
 
 // OPTIONS handler for CORS
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
     headers: corsHeaders,
   });
 }
 
+// POST handler
 export async function POST(request: NextRequest) {
   // CORS preflight için
   if (request.method === 'OPTIONS') {
