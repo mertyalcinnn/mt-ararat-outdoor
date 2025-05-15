@@ -36,105 +36,66 @@ export async function OPTIONS() {
 // POST handler
 export async function POST(request: NextRequest) {
   try {
-    console.log('Dosya yükleme isteği alındı');
-    
     // Cloudinary kimlik bilgilerini kontrol et
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      console.error('Cloudinary kimlik bilgileri eksik');
-      return NextResponse.json(
-        { error: 'Cloudinary yapılandırması eksik' },
-        { status: 500, headers: corsHeaders }
-      );
+      throw new Error('Cloudinary yapılandırması eksik');
     }
     
-    // formData'yı kontrollü şekilde al
-    let formData;
-    try {
-      formData = await request.formData();
-      console.log('FormData alındı, içerik anahtarları:', Array.from(formData.keys()));
-    } catch (formError) {
-      console.error('FormData işlenirken hata:', formError);
-      return NextResponse.json(
-        { error: 'Dosya verisi işlenemedi', details: formError instanceof Error ? formError.message : 'FormData hatası' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-    
+    // formData'yı al
+    const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
-      console.error('Dosya bulunamadı');
       return NextResponse.json(
         { error: 'Dosya yüklenemedi - dosya bulunamadı' },
         { status: 400, headers: corsHeaders }
       );
     }
 
-    console.log('Dosya bilgileri:', {
-      name: file.name,
-      type: file.type,
-      size: `${(file.size / 1024).toFixed(2)}KB`
-    });
-
-    // Dosya içeriğini bir buffer'a dönüştürelim
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
     // Görsel türünü kontrol et
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     if (!allowedMimeTypes.includes(file.type)) {
-      console.error('Geçersiz dosya formatı:', file.type);
       return NextResponse.json(
         { error: 'Geçersiz dosya formatı. Sadece jpg, jpeg, png, webp, gif ve svg desteklenmektedir.' },
         { status: 400, headers: corsHeaders }
       );
     }
 
-    try {
-      // Benzersiz bir dosya adı oluştur
-      const filename = `${generateUniqueId()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      
-      // Cloudinary'ye yükle
-      const result = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          {
-            folder: 'mt-ararat',
-            public_id: filename.split('.')[0], // Uzantıyı kaldır
-            resource_type: 'image',
-          },
-          (error, result) => {
-            if (error) {
-              console.error('Cloudinary yükleme hatası:', error);
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          }
-        ).end(buffer);
-      });
-      
-      // Sonucu döndür
-      console.log('Görsel Cloudinary\'ye başarıyla yüklendi', result);
-      
-      return NextResponse.json({
-        success: true,
-        url: result.secure_url,
-        fullUrl: result.secure_url,
-        filename: result.public_id
-      }, { headers: corsHeaders });
-      
-    } catch (cloudinaryError) {
-      console.error('Cloudinary yükleme hatası:', cloudinaryError);
-      return NextResponse.json(
-        { 
-          error: 'Görsel Cloudinary\'ye yüklenemedi', 
-          details: cloudinaryError instanceof Error ? cloudinaryError.message : String(cloudinaryError)
+    // Dosya içeriğini buffer'a dönüştür
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    
+    // Benzersiz dosya adı oluştur
+    const filename = `${generateUniqueId()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    
+    // Cloudinary'ye yükle
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: 'mt-ararat',
+          public_id: filename.split('.')[0],
+          resource_type: 'image',
         },
-        { status: 500, headers: corsHeaders }
-      );
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(buffer);
+    });
+
+    if (!result || typeof result !== 'object' || !('secure_url' in result)) {
+      throw new Error('Cloudinary yükleme başarısız');
     }
+
+    return NextResponse.json({
+      success: true,
+      url: result.secure_url,
+      fullUrl: result.secure_url,
+      filename: result.public_id
+    }, { headers: corsHeaders });
+      
   } catch (error) {
-    console.error('Genel hata:', error);
+    console.error('Hata:', error);
     return NextResponse.json(
       { 
         error: 'Görsel yüklenemedi', 
