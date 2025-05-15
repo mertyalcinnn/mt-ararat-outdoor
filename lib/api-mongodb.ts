@@ -225,10 +225,11 @@ export async function getAboutData() {
       const aboutDataPromise = findOne('about', {});
       const result = await Promise.race([aboutDataPromise, timeoutPromise]);
       
-      if (result) {
+      if (result && typeof result === 'object') {
         console.log('MongoDB\'den hakkımızda verileri alındı.');
-        // _id alanını JSON serileştirmede sorun yaratmaması için temizle
-        const { _id, ...cleanData } = result;
+        // TypeScript error fix: Check if _id exists before destructuring
+        // Use type assertion to let TypeScript know result has _id property
+        const { _id, ...cleanData } = result as { _id: any; [key: string]: any };
         return cleanData;
       } else {
         console.warn('MongoDB\'de hakkımızda verisi bulunamadı, JSON dosyasına geri dönülüyor.');
