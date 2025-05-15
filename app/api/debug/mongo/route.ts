@@ -14,6 +14,12 @@ export async function GET() {
     
     // 2. Veritabanına erişim kontrolü
     const db = await getDb();
+    
+    // Check if db is null before proceeding
+    if (!db) {
+      throw new Error('Veritabanı bağlantısı kurulamadı - db null');
+    }
+    
     console.log('Veritabanına erişim sağlandı');
     
     // 3. Kullanılabilir koleksiyonları listeleme
