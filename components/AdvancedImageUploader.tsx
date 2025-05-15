@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import OptimizedImage from './OptimizedImage';
 
 // Görsel önizleme bileşeni
-const ImagePreview = ({ imageUrl }) => {
+const ImagePreview = ({ imageUrl }: { imageUrl: string }) => {
   if (!imageUrl) return null;
   
   return (
