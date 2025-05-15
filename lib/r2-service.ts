@@ -90,7 +90,6 @@ export async function uploadToR2(
       Key: uniqueFilename,
       Body: buffer,
       ContentType: contentType,
-      ACL: 'public-read', // Dosyayı herkese açık yap
     });
     
     // Dosyayı yükle

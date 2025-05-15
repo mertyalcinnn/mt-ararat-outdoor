@@ -6,7 +6,9 @@ const nextConfig = {
       'via.placeholder.com',
       'localhost',
       'mt-ararat-outdoor.vercel.app',
-      'test.dca1d77346db58b70426de41aea91f46.r2.cloudflarestorage.com'
+      'test.dca1d77346db58b70426de41aea91f46.r2.cloudflarestorage.com',
+      'likyaclimbing.com',
+      'www.likyaclimbing.com'
     ],
     remotePatterns: [
       {
@@ -18,6 +20,10 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+    // Bilinmeyen görüntüler için Blob URL'leri yok sayma
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Vercel için basit yapılandırma
   swcMinify: true,
