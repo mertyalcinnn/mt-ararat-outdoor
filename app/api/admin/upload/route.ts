@@ -62,16 +62,11 @@ export async function POST(request: Request) {
       ).end(buffer);
     });
 
-    if (!result || typeof result !== 'object' || !('secure_url' in result)) {
-      throw new Error('Upload failed');
-    }
-
     return NextResponse.json({
       success: true,
       url: result.secure_url,
     });
   } catch (error) {
-    console.error('Upload error:', error);
     return NextResponse.json(
       { error: 'Upload failed' },
       { status: 500 }
